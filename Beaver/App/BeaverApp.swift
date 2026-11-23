@@ -23,10 +23,15 @@ struct RootView: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        if model.onboardingDone {
-            MainTabView()
-        } else {
-            OnboardingView()
+        Group {
+            if model.onboardingDone {
+                MainTabView()
+            } else {
+                OnboardingView()
+            }
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if let detail = model.startupError { StartupErrorBanner(detail: detail) }
         }
     }
 }
