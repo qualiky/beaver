@@ -58,12 +58,28 @@ final class IncomeSourceEditorModel {
     private(set) var isLoaded = false
     let isNew: Bool
     private let existingRateCardID: Int?
+    private(set) var touches = FieldTouches<Field>()
 
-    init(source: IncomeSource? = nil, today: LocalDate = LocalDate.today()) {
+    func touch(_ field: Field) { touches.touch(field) }
+
+    /// Shows every error, as after a failed save attempt.
+    func revealAllIssues() {
+        touches.revealAll = true
+        rateCard.revealAllIssues()
+    }
+
+    /// The field's issue, only once it has been edited or a save was attempted.
+    func visibleIssue(for field: Field) -> String? {
+        if field == .rates { return touches.revealAll || rateCard.rulesTouched ? issue(for: .rates) : nil }
+        return touches.shows(field) ? issue(for: field) : nil
+    }
+
+    /// `newKind` is the type a new (nil) source starts as; an existing source keeps its own.
+    init(source: IncomeSource? = nil, newKind: IncomeKind = .hourly, today: LocalDate = LocalDate.today()) {
         isNew = source == nil
         id = source?.id ?? 0
         name = source?.name ?? ""
-        kind = source?.kind ?? .hourly
+        kind = source?.kind ?? newKind
         fixedAmountText = source?.fixedAmount.map { MoneyParser.text(fromCents: $0.cents) } ?? ""
         amountIsNet = source?.amountIsNet ?? false
         isActive = source?.isActive ?? true
@@ -209,7 +225,7 @@ final class IncomeSourceEditorModel {
     /// Saves the rate card (hourly) and then the source. Returns the stored source.
     @discardableResult
     func save(using repository: Repository) throws -> IncomeSource {
-        guard isValid else { throw EditorError.invalid }
+        guard isValid else { revealAllIssues(); throw EditorError.invalid }
         var cardID: Int?
         if kind == .hourly {
             let trimmed = name.trimmingCharacters(in: .whitespaces)
@@ -244,12 +260,13 @@ struct IncomeSourceEditor: View {
     @State private var model: IncomeSourceEditorModel
     @State private var errorMessage: String?
 
-    init(source: IncomeSource? = nil, style: EditorStyle = .push,
+    /// `kind` is the type a new source starts as (ignored when editing `source`).
+    init(source: IncomeSource? = nil, kind: IncomeKind = .hourly, style: EditorStyle = .push,
          onSave: @escaping (IncomeSource) -> Void, onDelete: (() -> Void)? = nil) {
         self.style = style
         self.onSave = onSave
         self.onDelete = onDelete
-        _model = State(initialValue: IncomeSourceEditorModel(source: source))
+        _model = State(initialValue: IncomeSourceEditorModel(source: source, newKind: kind))
     }
 
     private var currency: String { store?.settings.currency ?? "AUD" }
@@ -300,14 +317,16 @@ struct IncomeSourceEditor: View {
             .pickerStyle(.segmented)
             TextField("Name", text: $model.name)
                 .textInputAutocapitalization(.words)
-            EditorFieldMessage(model.issue(for: .name))
+                .onChange(of: model.name) { model.touch(.name) }
+            EditorFieldMessage(model.visibleIssue(for: .name))
         }
     }
 
     private var fixedAmount: some View {
         Section {
             MoneyField("Amount per pay", text: $model.fixedAmountText, currencyCode: currency)
-            EditorFieldMessage(model.issue(for: .amount))
+                .onChange(of: model.fixedAmountText) { model.touch(.amount) }
+            EditorFieldMessage(model.visibleIssue(for: .amount))
             Picker("Amount is", selection: $model.amountIsNet) {
                 Text("Gross (before tax)").tag(false)
                 Text("Net (take-home)").tag(true)
@@ -341,7 +360,7 @@ struct IncomeSourceEditor: View {
                     .accessibilityLabel("Day of month")
                     .accessibilityValue("\(model.dayOfMonth)")
             }
-            EditorFieldMessage(model.issue(for: .schedule))
+            EditorFieldMessage(model.visibleIssue(for: .schedule))
         }
     }
 
@@ -364,6 +383,7 @@ struct IncomeSourceEditor: View {
                 ForEach(IncomeTaxKind.allCases, id: \.self) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
+            .onChange(of: model.taxKind) { model.touch(.tax) }
             switch model.taxKind {
             case .none:
                 EmptyView()
@@ -375,6 +395,7 @@ struct IncomeSourceEditor: View {
                             .multilineTextAlignment(.trailing)
                             .monospacedDigit()
                             .accessibilityLabel("Flat tax percent")
+                            .onChange(of: model.flatPercentText) { model.touch(.tax) }
                         Text("%").foregroundStyle(.secondary).accessibilityHidden(true)
                     }
                 }
@@ -384,7 +405,7 @@ struct IncomeSourceEditor: View {
                     ForEach(model.tables) { Text($0.name).tag(String?.some($0.id)) }
                 }
             }
-            EditorFieldMessage(model.issue(for: .tax))
+            EditorFieldMessage(model.visibleIssue(for: .tax))
         } header: {
             Text("Tax")
         } footer: {
@@ -411,10 +432,12 @@ struct IncomeSourceEditor: View {
                     .keyboardType(.numberPad)
                     .multilineTextAlignment(.trailing)
                     .accessibilityLabel(title)
+                    .onChange(of: text.wrappedValue) { model.touch(field) }
+                    .onChange(of: text.wrappedValue) { if field == .softCap { model.touch(.hardCap) } }
                 Text("hours").foregroundStyle(.secondary).accessibilityHidden(true)
             }
         }
-        EditorFieldMessage(model.issue(for: field))
+        EditorFieldMessage(model.visibleIssue(for: field))
     }
 
     // MARK: Actions
@@ -450,10 +473,7 @@ struct IncomeSourceEditor: View {
         .environment(\.repository, EditorPreviewSupport.repository())
 }
 
-#Preview("Fixed salary (sheet)") {
-    IncomeSourceEditor(
-        source: IncomeSource(id: 0, name: "Example Salary", kind: .fixed, fixedAmount: .dollars(4800), amountIsNet: true,
-                             schedule: .monthly(dayOfMonth: 31)),
-        style: .sheet) { _ in }
+#Preview("New fixed income (sheet)") {
+    IncomeSourceEditor(kind: .fixed, style: .sheet) { _ in }
         .environment(\.repository, EditorPreviewSupport.repository(demo: false))
 }

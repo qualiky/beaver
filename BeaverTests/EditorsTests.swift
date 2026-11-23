@@ -581,3 +581,71 @@ struct LimitsEditorTests {
         #expect(!m.hasLimit)
     }
 }
+
+// MARK: - Pristine forms show no errors
+
+@MainActor
+struct PristineFormTests {
+    @Test func newIncomeShowsNoErrorsUntilEdited() {
+        let m = IncomeSourceEditorModel(today: today)
+        #expect(!m.isValid)
+        for field in IncomeSourceEditorModel.Field.allCases { #expect(m.visibleIssue(for: field) == nil) }
+        m.touch(.name)
+        #expect(m.visibleIssue(for: .name) != nil)
+        #expect(m.visibleIssue(for: .rates) == nil)
+        m.rateCard.addRule()
+        m.rateCard.removeRule(id: m.rateCard.rules[0].id)
+        #expect(m.visibleIssue(for: .rates) != nil)
+    }
+
+    @Test func failedSaveRevealsEverything() throws {
+        let m = IncomeSourceEditorModel(today: today)
+        #expect(throws: EditorError.self) { try m.save(using: repo()) }
+        #expect(m.visibleIssue(for: .name) != nil)
+        #expect(m.visibleIssue(for: .rates) != nil)
+        #expect(m.rateCard.visibleNameIssue != nil)
+    }
+
+    @Test func newFixedIncomeIsNewWithoutDelete() {
+        let m = IncomeSourceEditorModel(newKind: .fixed, today: today)
+        #expect(m.isNew)
+        #expect(m.kind == .fixed)
+        #expect(m.visibleIssue(for: .amount) == nil)
+    }
+
+    @Test func otherEditorsAreQuietWhenPristine() {
+        let bill = BillEditorModel(today: today)
+        for f in BillEditorModel.Field.allCases { #expect(bill.visibleIssue(for: f) == nil) }
+        bill.touch(.amount)
+        #expect(bill.visibleIssue(for: .amount) != nil)
+
+        let goal = GoalEditorModel()
+        for f in GoalEditorModel.Field.allCases { #expect(goal.visibleIssue(for: f) == nil) }
+        goal.touch(.target)
+        #expect(goal.visibleIssue(for: .target) != nil)
+
+        let tpl = TemplateEditorModel(sourceID: 1, today: today)
+        #expect(tpl.visibleShiftsIssue == nil)
+        tpl.addShift(); tpl.removeShift(id: tpl.shifts[0].id)
+        #expect(tpl.visibleShiftsIssue != nil)
+
+        let card = RateCardEditorModel()
+        #expect(card.visibleNameIssue == nil && card.visibleRulesIssue == nil)
+        card.addRule()
+        #expect(card.visibleBandIssue(card.rules[0]) == nil)
+    }
+
+    @Test func presetsHaveDistinctSymbols() {
+        let symbols = BillPreset.common.map(\.symbol)
+        #expect(Set(symbols).count == symbols.count)
+        #expect(BillPreset.common.first { $0.name == "Phone" }?.symbol == "iphone")
+    }
+
+    @Test func timeZoneSearchPutsCurrentFirstAndFilters() {
+        let all = ["Australia/Sydney", "Europe/London", "America/New_York"]
+        #expect(TimeZoneChoices.filtered(query: "", current: "Europe/London", all: all).first == "Europe/London")
+        #expect(TimeZoneChoices.filtered(query: "new york", current: "Europe/London", all: all) == ["America/New_York"])
+        #expect(TimeZoneChoices.filtered(query: "SYD", current: "Europe/London", all: all) == ["Australia/Sydney"])
+        #expect(TimeZoneChoices.filtered(query: "", current: "Mars/Base", all: all).first == "Mars/Base")
+    }
+}

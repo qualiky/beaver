@@ -243,9 +243,7 @@ private struct SettingsContent: View {
             Picker("Currency", selection: Binding(get: { model.settings.currency }, set: { model.setCurrency($0) })) {
                 ForEach(Self.currencies, id: \.self) { Text($0).tag($0) }
             }
-            Picker("Time zone", selection: Binding(get: { model.settings.timeZoneID }, set: { model.setTimeZone($0) })) {
-                ForEach(Self.zoneIDs(including: model.settings.timeZoneID), id: \.self) { Text($0.replacingOccurrences(of: "_", with: " ")).tag($0) }
-            }
+            TimeZonePicker(selection: Binding(get: { model.settings.timeZoneID }, set: { model.setTimeZone($0) }))
             MoneyField("Weekly living budget", text: $livingBudgetText, currencyCode: currency)
                 .focused($budgetFocused)
                 .onChange(of: budgetFocused) { _, focused in if !focused { commitBudget() } }
@@ -261,14 +259,12 @@ private struct SettingsContent: View {
     }
 
     static let currencies = ["AUD", "NZD", "USD", "GBP", "EUR", "CAD", "SGD", "JPY"]
-    static func zoneIDs(including current: String) -> [String] {
-        let all = TimeZone.knownTimeZoneIdentifiers
-        return all.contains(current) ? all : [current] + all
-    }
 
     private var setupSection: some View {
         Section {
             Button { showOnboarding = true } label: { Label("Re-run setup", systemImage: "arrow.counterclockwise") }
+        } footer: {
+            Text("Walk through setup again. Your data is kept.")
         }
     }
 

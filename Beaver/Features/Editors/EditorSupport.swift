@@ -127,6 +127,16 @@ extension Binding where Value == LocalTime {
     }
 }
 
+/// Tracks which fields the user has edited, so a pristine form shows no errors. `revealAll` is set when a save is attempted.
+struct FieldTouches<Field: Hashable & Sendable>: Sendable {
+    private(set) var touched: Set<Field> = []
+    var revealAll = false
+
+    mutating func touch(_ field: Field) { touched.insert(field) }
+
+    func shows(_ field: Field) -> Bool { revealAll || touched.contains(field) }
+}
+
 /// A small red inline message under an invalid field. Renders nothing when `text` is nil.
 struct EditorFieldMessage: View {
     let text: String?

@@ -51,6 +51,13 @@ final class GoalEditorModel {
         }
     }
 
+    private(set) var touches = FieldTouches<Field>()
+
+    func touch(_ field: Field) { touches.touch(field) }
+    func revealAllIssues() { touches.revealAll = true }
+    /// The field's issue, only once it has been edited or a save was attempted.
+    func visibleIssue(for field: Field) -> String? { touches.shows(field) ? issue(for: field) : nil }
+
     func issue(for field: Field) -> String? {
         switch field {
         case .name:
@@ -86,7 +93,7 @@ final class GoalEditorModel {
     /// Saves the goal, then its initial deposit (new goals only), then the primary-goal setting.
     @discardableResult
     func save(using repository: Repository) throws -> Goal {
-        guard let goal = makeGoal() else { throw EditorError.invalid }
+        guard let goal = makeGoal() else { revealAllIssues(); throw EditorError.invalid }
         let stored = try repository.save(goal)
         if let cents = initialDepositCents {
             try repository.save(Deposit(goalID: stored.id, date: today, amount: Money(cents: cents), note: "Already saved"))
@@ -135,16 +142,19 @@ struct GoalEditor: View {
             Section("Goal") {
                 TextField("Name", text: $model.name)
                     .textInputAutocapitalization(.words)
-                EditorFieldMessage(model.issue(for: .name))
+                    .onChange(of: model.name) { model.touch(.name) }
+                EditorFieldMessage(model.visibleIssue(for: .name))
                 MoneyField("Target", text: $model.targetText, currencyCode: currency)
-                EditorFieldMessage(model.issue(for: .target))
+                    .onChange(of: model.targetText) { model.touch(.target) }
+                EditorFieldMessage(model.visibleIssue(for: .target))
             }
 
             Section {
                 Toggle("Deadline", isOn: $model.hasDeadline)
                 if model.hasDeadline {
                     DatePicker("Save by", selection: $model.deadline.asDate, displayedComponents: .date)
-                    EditorFieldMessage(model.issue(for: .deadline))
+                        .onChange(of: model.deadline) { model.touch(.deadline) }
+                    EditorFieldMessage(model.visibleIssue(for: .deadline))
                 }
             } footer: {
                 Text("Without a deadline the forecast looks 26 weeks ahead.")
@@ -153,7 +163,8 @@ struct GoalEditor: View {
             if model.isNew {
                 Section {
                     MoneyField("Already saved", text: $model.savedText, currencyCode: currency)
-                    EditorFieldMessage(model.issue(for: .saved))
+                        .onChange(of: model.savedText) { model.touch(.saved) }
+                    EditorFieldMessage(model.visibleIssue(for: .saved))
                 } footer: {
                     Text("Counted as a first deposit towards this goal. Leave blank if you're starting from zero.")
                 }

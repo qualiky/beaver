@@ -60,6 +60,14 @@ final class TemplateEditorModel {
     var hasEffectiveFrom: Bool
     var effectiveFrom: LocalDate
     var shifts: [TemplateShiftDraft]
+    private(set) var nameTouched = false
+    private(set) var shiftsTouched = false
+    private(set) var revealAll = false
+
+    func touchName() { nameTouched = true }
+    func revealAllIssues() { revealAll = true }
+    var visibleNameIssue: String? { nameTouched || revealAll ? nameIssue : nil }
+    var visibleShiftsIssue: String? { shiftsTouched || revealAll ? shiftsIssue : nil }
 
     init(sourceID: Int, template: Template? = nil, today: LocalDate = LocalDate.today()) {
         self.sourceID = template?.sourceID ?? sourceID
@@ -74,9 +82,10 @@ final class TemplateEditorModel {
     func addShift() {
         let used = Set(shifts.map(\.weekday))
         shifts.append(TemplateShiftDraft(weekday: Weekday.allCases.first { !used.contains($0) } ?? .monday))
+        shiftsTouched = true
     }
 
-    func removeShift(id: UUID) { shifts.removeAll { $0.id == id } }
+    func removeShift(id: UUID) { shifts.removeAll { $0.id == id }; shiftsTouched = true }
 
     var nameIssue: String? {
         name.trimmingCharacters(in: .whitespaces).isEmpty ? "Enter a name, such as Semester 1." : nil
@@ -101,7 +110,7 @@ final class TemplateEditorModel {
 
     @discardableResult
     func save(using repository: Repository) throws -> Template {
-        guard let template = makeTemplate() else { throw EditorError.invalid }
+        guard let template = makeTemplate() else { revealAllIssues(); throw EditorError.invalid }
         return try repository.save(template)
     }
 
@@ -139,7 +148,8 @@ struct TemplateEditor: View {
                        canSave: model.isValid, errorMessage: $errorMessage, onSave: save) {
             Section("Name") {
                 TextField("Name", text: $model.name)
-                EditorFieldMessage(model.nameIssue)
+                    .onChange(of: model.name) { model.touchName() }
+                EditorFieldMessage(model.visibleNameIssue)
             }
 
             Section {
@@ -159,7 +169,7 @@ struct TemplateEditor: View {
 
             Section {
                 Button { model.addShift() } label: { Label("Add shift", systemImage: "plus.circle") }
-                EditorFieldMessage(model.shiftsIssue)
+                EditorFieldMessage(model.visibleShiftsIssue)
             } footer: {
                 if !model.shifts.isEmpty {
                     Text("About \(model.paidMinutes / 60) h \(model.paidMinutes % 60) min paid per week.")

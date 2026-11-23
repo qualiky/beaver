@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// The one place Settings presents onboarding. It shows `OnboardingView()` today.
-/// After the Onboarding branch merges, change the body to `OnboardingView(mode: .rerun)`.
+/// The one place Settings presents onboarding: the re-run flow, which keeps existing data and dismisses when done.
 struct OnboardingLauncher: View {
     var body: some View {
-        OnboardingView()
+        OnboardingView(mode: .rerun)
     }
 }

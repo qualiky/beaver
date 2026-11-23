@@ -51,13 +51,15 @@ private struct OnboardingFlow: View {
 
     var body: some View {
         NavigationStack {
+            // The bar is a real sibling below the step, so every step's scroll content ends above it.
             VStack(spacing: 0) {
                 progressHeader
                 stepContent
                     .id(model.step)
                     .transition(.opacity)
+                    .contentMargins(.bottom, 16, for: .scrollContent)
+                navigationBar
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) { navigationBar }
             .toolbar(.hidden, for: .navigationBar)
             .background(Color(.systemGroupedBackground))
         }
@@ -110,6 +112,11 @@ private struct OnboardingFlow: View {
     private var progressHeader: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
+                if model.mode == .rerun {
+                    Button { dismiss() } label: { Image(systemName: "xmark.circle.fill").imageScale(.large) }
+                        .foregroundStyle(.secondary)
+                        .accessibilityLabel("Close setup")
+                }
                 Text("Step \(model.stepNumber) of \(model.stepCount)")
                 Spacer()
                 Text(model.step.title)
@@ -133,7 +140,7 @@ private struct OnboardingFlow: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 10)
-        .background(.bar)
+        .background(.bar, ignoresSafeAreaEdges: .bottom)
     }
 
     private var backButton: some View {
@@ -194,13 +201,8 @@ private struct OnboardingFlow: View {
     private func sheetContent(_ item: OnboardingSheet) -> some View {
         switch item {
         case .newIncome(let kind):
-            if kind == .hourly {
-                IncomeSourceEditor(style: .sheet) { saved in
-                    pendingUsualWeek = saved
-                }
-            } else {
-                // A blank salary draft, so the editor opens on "Fixed amount". Id 0 is saved as a new source.
-                IncomeSourceEditor(source: Self.salaryDraft, style: .sheet) { _ in }
+            IncomeSourceEditor(kind: kind, style: .sheet) { saved in
+                if saved.kind == .hourly { pendingUsualWeek = saved }
             }
         case .editIncome(let source):
             IncomeSourceEditor(source: source, style: .sheet, onSave: { _ in }, onDelete: {})
@@ -239,10 +241,6 @@ private struct OnboardingFlow: View {
                 model.stageRestore(error: error)
             }
         }
-    }
-
-    private static var salaryDraft: IncomeSource {
-        IncomeSource(id: 0, name: "", kind: .fixed, schedule: .weekly(payWeekday: .wednesday, lagWeeks: 1))
     }
 }
 

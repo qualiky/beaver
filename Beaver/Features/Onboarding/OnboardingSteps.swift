@@ -124,10 +124,7 @@ struct WelcomeStep: View {
                         Text("\(code) \(MoneyParser.symbol(for: code))").tag(code)
                     }
                 }
-                Picker("Time zone", selection: Binding(get: { model.timeZoneID }, set: { model.setTimeZone($0) })) {
-                    ForEach(OnboardingModel.timeZoneChoices, id: \.self) { Text($0.replacingOccurrences(of: "_", with: " ")).tag($0) }
-                }
-                .pickerStyle(.navigationLink)
+                TimeZonePicker(selection: Binding(get: { model.timeZoneID }, set: { model.setTimeZone($0) }))
             } header: {
                 Text("Your money")
             } footer: {

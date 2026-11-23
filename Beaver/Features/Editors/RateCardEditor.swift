@@ -13,6 +13,9 @@ struct RateRuleDraft: Identifiable, Equatable, Sendable {
     var hasWindow = false
     var fromMinute = 9 * 60
     var toMinute = 17 * 60
+    /// Set once the user edits the band or rate, so a fresh blank row shows no errors.
+    var bandTouched = false
+    var rateTouched = false
 
     init() {}
 
@@ -62,6 +65,18 @@ final class RateCardEditorModel {
     private(set) var id: Int
     var name: String
     var rules: [RateRuleDraft]
+    /// Pristine forms show no errors: these are set by editing, or by `revealAllIssues()` on a failed save.
+    private(set) var nameTouched = false
+    private(set) var rulesTouched = false
+    private(set) var revealAll = false
+
+    func touchName() { nameTouched = true }
+    func revealAllIssues() { revealAll = true }
+
+    var visibleNameIssue: String? { nameTouched || revealAll ? nameIssue : nil }
+    var visibleRulesIssue: String? { rulesTouched || revealAll ? rulesIssue : nil }
+    func visibleBandIssue(_ draft: RateRuleDraft) -> String? { draft.bandTouched || revealAll ? draft.bandIssue : nil }
+    func visibleRateIssue(_ draft: RateRuleDraft) -> String? { draft.rateTouched || revealAll ? draft.rateIssue : nil }
 
     init(card: RateCard? = nil) {
         id = card?.id ?? 0
@@ -82,12 +97,13 @@ final class RateCardEditorModel {
     func applyTypicalCasual() {
         let template = RateCard.typicalCasual()
         rules = template.rules.map(RateRuleDraft.init(rule:))
+        rulesTouched = true
         if name.trimmingCharacters(in: .whitespaces).isEmpty { name = template.name }
     }
 
-    func addRule() { rules.append(RateRuleDraft()) }
+    func addRule() { rules.append(RateRuleDraft()); rulesTouched = true }
 
-    func removeRule(id: UUID) { rules.removeAll { $0.id == id } }
+    func removeRule(id: UUID) { rules.removeAll { $0.id == id }; rulesTouched = true }
 
     func moveRule(id: UUID, by offset: Int) {
         guard let i = rules.firstIndex(where: { $0.id == id }) else { return }
@@ -131,7 +147,7 @@ final class RateCardEditorModel {
 
     @discardableResult
     func save(using repository: Repository, nameOverride: String? = nil) throws -> RateCard {
-        guard let card = makeCard(nameOverride: nameOverride) else { throw EditorError.invalid }
+        guard let card = makeCard(nameOverride: nameOverride) else { revealAllIssues(); throw EditorError.invalid }
         return try repository.save(card)
     }
 }
@@ -156,7 +172,8 @@ struct RateCardSections: View {
         if showsName {
             Section("Name") {
                 TextField("Rate card name", text: $model.name)
-                EditorFieldMessage(model.nameIssue)
+                    .onChange(of: model.name) { model.touchName() }
+                EditorFieldMessage(model.visibleNameIssue)
             }
         }
 
@@ -182,7 +199,7 @@ struct RateCardSections: View {
 
         Section {
             Button { model.addRule() } label: { Label("Add rate", systemImage: "plus.circle") }
-            EditorFieldMessage(model.rulesIssue)
+            EditorFieldMessage(model.visibleRulesIssue)
             if let warning = model.gapWarning { EditorWarning(text: warning) }
         } footer: {
             Text("The first matching rate wins. A public holiday rate overrides the others on holidays.")
@@ -196,8 +213,10 @@ struct RateCardSections: View {
             set: { new in if let i = model.rules.firstIndex(where: { $0.id == draft.id }) { model.rules[i] = new } }
         )
         Section {
-            TextField("Band name", text: binding.band)
-            EditorFieldMessage(binding.wrappedValue.bandIssue)
+            TextField("Band name", text: Binding(
+                get: { binding.wrappedValue.band },
+                set: { binding.wrappedValue.band = $0; binding.wrappedValue.bandTouched = true }))
+            EditorFieldMessage(model.visibleBandIssue(binding.wrappedValue))
 
             Picker("Days", selection: binding.days) {
                 ForEach(DaySelector.allCases, id: \.self) { Text(EditorLabels.dayTitle($0)).tag($0) }
@@ -210,8 +229,11 @@ struct RateCardSections: View {
                 EditorFieldMessage(binding.wrappedValue.windowIssue)
             }
 
-            MoneyField("Rate", text: binding.rateText, currencyCode: currencyCode, suffix: "/ hr")
-            EditorFieldMessage(binding.wrappedValue.rateIssue)
+            MoneyField("Rate", text: Binding(
+                get: { binding.wrappedValue.rateText },
+                set: { binding.wrappedValue.rateText = $0; binding.wrappedValue.rateTouched = true }),
+                       currencyCode: currencyCode, suffix: "/ hr")
+            EditorFieldMessage(model.visibleRateIssue(binding.wrappedValue))
         } header: {
             HStack {
                 Text("Rate \(index + 1)")

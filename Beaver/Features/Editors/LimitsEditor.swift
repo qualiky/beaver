@@ -23,6 +23,12 @@ final class LimitsEditorModel {
     /// New rows carry a negative temporary id until saved.
     private(set) var unavailable: [UnavailableRange] = []
     private(set) var isLoaded = false
+    private(set) var touches = FieldTouches<Field>()
+
+    func touch(_ field: Field) { touches.touch(field) }
+    func revealAllIssues() { touches.revealAll = true }
+    /// The field's issue, only once it has been edited or a save was attempted.
+    func visibleIssue(for field: Field) -> String? { touches.shows(field) ? issue(for: field) : nil }
 
     private var original = LimitsValue()
     private var nextTempID = -1
@@ -125,7 +131,7 @@ final class LimitsEditorModel {
     /// Writes the differences to the repository and returns what is now stored.
     @discardableResult
     func save(using repository: Repository) throws -> LimitsValue {
-        guard isLoaded, let value = makeValue() else { throw EditorError.invalid }
+        guard isLoaded, let value = makeValue() else { revealAllIssues(); throw EditorError.invalid }
 
         // Fortnight limit: keep one row at most.
         let storedLimits = try repository.hoursLimits()
@@ -199,10 +205,11 @@ struct LimitsEditor: View {
                             .keyboardType(.numberPad)
                             .multilineTextAlignment(.trailing)
                             .accessibilityLabel("Hours per fortnight")
+                            .onChange(of: model.hoursText) { model.touch(.hours) }
                         Text("per fortnight").foregroundStyle(.secondary).accessibilityHidden(true)
                     }
                 }
-                EditorFieldMessage(model.issue(for: .hours))
+                EditorFieldMessage(model.visibleIssue(for: .hours))
                 DatePicker("Effective from", selection: $model.effectiveFrom.asDate, displayedComponents: .date)
             }
         } header: {

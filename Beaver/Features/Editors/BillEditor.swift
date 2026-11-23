@@ -39,25 +39,27 @@ struct BillPreset: Identifiable, Hashable, Sendable {
     let name: String
     let category: BillCategory
     let cadence: BillCadenceKind
+    /// The chip's own SF Symbol (available on iOS 18).
+    let symbol: String
 
     var id: String { name }
 
     /// Rent, Phone, Internet, Electricity, Gas, Water, Transport card, Gym, Streaming, Music, Cloud storage,
     /// Insurance and Loan repayment.
     static let common: [BillPreset] = [
-        BillPreset(name: "Rent", category: .housing, cadence: .weekly),
-        BillPreset(name: "Phone", category: .utilities, cadence: .monthly),
-        BillPreset(name: "Internet", category: .utilities, cadence: .monthly),
-        BillPreset(name: "Electricity", category: .utilities, cadence: .quarterly),
-        BillPreset(name: "Gas", category: .utilities, cadence: .quarterly),
-        BillPreset(name: "Water", category: .utilities, cadence: .quarterly),
-        BillPreset(name: "Transport card", category: .transport, cadence: .weekly),
-        BillPreset(name: "Gym", category: .subscription, cadence: .fortnightly),
-        BillPreset(name: "Streaming", category: .subscription, cadence: .monthly),
-        BillPreset(name: "Music", category: .subscription, cadence: .monthly),
-        BillPreset(name: "Cloud storage", category: .subscription, cadence: .monthly),
-        BillPreset(name: "Insurance", category: .insurance, cadence: .monthly),
-        BillPreset(name: "Loan repayment", category: .debt, cadence: .fortnightly),
+        BillPreset(name: "Rent", category: .housing, cadence: .weekly, symbol: "house"),
+        BillPreset(name: "Phone", category: .utilities, cadence: .monthly, symbol: "iphone"),
+        BillPreset(name: "Internet", category: .utilities, cadence: .monthly, symbol: "wifi"),
+        BillPreset(name: "Electricity", category: .utilities, cadence: .quarterly, symbol: "bolt"),
+        BillPreset(name: "Gas", category: .utilities, cadence: .quarterly, symbol: "flame"),
+        BillPreset(name: "Water", category: .utilities, cadence: .quarterly, symbol: "drop"),
+        BillPreset(name: "Transport card", category: .transport, cadence: .weekly, symbol: "tram.card"),
+        BillPreset(name: "Gym", category: .subscription, cadence: .fortnightly, symbol: "dumbbell"),
+        BillPreset(name: "Streaming", category: .subscription, cadence: .monthly, symbol: "tv"),
+        BillPreset(name: "Music", category: .subscription, cadence: .monthly, symbol: "music.note"),
+        BillPreset(name: "Cloud storage", category: .subscription, cadence: .monthly, symbol: "icloud"),
+        BillPreset(name: "Insurance", category: .insurance, cadence: .monthly, symbol: "shield"),
+        BillPreset(name: "Loan repayment", category: .debt, cadence: .fortnightly, symbol: "creditcard"),
     ]
 }
 
@@ -72,14 +74,15 @@ struct BillPresetPicker: View {
             ForEach(presets) { preset in
                 let selected = preset.name == selectedName
                 Button { onSelect(preset) } label: {
-                    Label(preset.name, systemImage: EditorLabels.categorySymbol(preset.category))
+                    Label(preset.name, systemImage: preset.symbol)
                         .font(.subheadline)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                        .frame(maxWidth: .infinity)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
                 }
                 .buttonStyle(.bordered)
-                .buttonBorderShape(.capsule)
+                .buttonBorderShape(.roundedRectangle(radius: 12))
                 .tint(selected ? .accentColor : .secondary)
                 .accessibilityLabel("\(preset.name), \(EditorLabels.categoryTitle(preset.category)), \(preset.cadence.title)")
                 .accessibilityAddTraits(selected ? .isSelected : [])
@@ -112,6 +115,12 @@ final class BillEditorModel {
     var note: String
     private(set) var presetName: String?
     let isNew: Bool
+    private(set) var touches = FieldTouches<Field>()
+
+    func touch(_ field: Field) { touches.touch(field) }
+    func revealAllIssues() { touches.revealAll = true }
+    /// The field's issue, only once it has been edited or a save was attempted.
+    func visibleIssue(for field: Field) -> String? { touches.shows(field) ? issue(for: field) : nil }
 
     init(bill: Bill? = nil, today: LocalDate = LocalDate.today()) {
         isNew = bill == nil
@@ -187,7 +196,7 @@ final class BillEditorModel {
 
     @discardableResult
     func save(using repository: Repository) throws -> Bill {
-        guard let bill = makeBill() else { throw EditorError.invalid }
+        guard let bill = makeBill() else { revealAllIssues(); throw EditorError.invalid }
         return try repository.save(bill)
     }
 
@@ -236,9 +245,11 @@ struct BillEditor: View {
             Section("Bill") {
                 TextField("Name", text: $model.name)
                     .textInputAutocapitalization(.words)
-                EditorFieldMessage(model.issue(for: .name))
+                    .onChange(of: model.name) { model.touch(.name) }
+                EditorFieldMessage(model.visibleIssue(for: .name))
                 MoneyField("Amount", text: $model.amountText, currencyCode: currency)
-                EditorFieldMessage(model.issue(for: .amount))
+                    .onChange(of: model.amountText) { model.touch(.amount) }
+                EditorFieldMessage(model.visibleIssue(for: .amount))
                 Picker("Category", selection: $model.category) {
                     ForEach(BillCategory.allCases, id: \.self) {
                         Label(EditorLabels.categoryTitle($0), systemImage: EditorLabels.categorySymbol($0)).tag($0)
@@ -257,6 +268,7 @@ struct BillEditor: View {
                                 .keyboardType(.numberPad)
                                 .multilineTextAlignment(.trailing)
                                 .accessibilityLabel("Number of days between payments")
+                                .onChange(of: model.everyNDaysText) { model.touch(.cadence) }
                             Text("days").foregroundStyle(.secondary).accessibilityHidden(true)
                         }
                     }
@@ -266,7 +278,7 @@ struct BillEditor: View {
                         .accessibilityLabel("Day of the month")
                         .accessibilityValue("\(model.dayOfMonth)")
                 }
-                EditorFieldMessage(model.issue(for: .cadence))
+                EditorFieldMessage(model.visibleIssue(for: .cadence))
                 DatePicker(model.cadenceKind == .oneOff ? "Due date" : "Next due", selection: $model.anchorDate.asDate,
                            displayedComponents: .date)
             } header: {
