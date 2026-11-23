@@ -463,6 +463,7 @@ struct IncomeSourceEditor: View {
     }
 }
 
+#if DEBUG
 #Preview("New hourly") {
     NavigationStack { IncomeSourceEditor { _ in } }
         .environment(\.repository, EditorPreviewSupport.repository(demo: false))
@@ -477,3 +478,4 @@ struct IncomeSourceEditor: View {
     IncomeSourceEditor(kind: .fixed, style: .sheet) { _ in }
         .environment(\.repository, EditorPreviewSupport.repository(demo: false))
 }
+#endif

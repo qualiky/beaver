@@ -206,6 +206,7 @@ struct GoalEditor: View {
     }
 }
 
+#if DEBUG
 #Preview("New goal") {
     NavigationStack { GoalEditor { _ in } }
         .environment(\.repository, EditorPreviewSupport.repository(demo: false))
@@ -215,3 +216,4 @@ struct GoalEditor: View {
     NavigationStack { GoalEditor(goal: DemoData.goal) { _ in } onDelete: {} }
         .environment(\.repository, EditorPreviewSupport.repository())
 }
+#endif

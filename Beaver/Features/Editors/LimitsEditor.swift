@@ -405,6 +405,7 @@ private struct UnavailableSheet: View {
     }
 }
 
+#if DEBUG
 #Preview("Demo limits") {
     NavigationStack { LimitsEditor { _ in } }
         .environment(\.repository, EditorPreviewSupport.repository())
@@ -414,3 +415,4 @@ private struct UnavailableSheet: View {
     LimitsEditor(style: .sheet) { _ in }
         .environment(\.repository, EditorPreviewSupport.repository(demo: false))
 }
+#endif

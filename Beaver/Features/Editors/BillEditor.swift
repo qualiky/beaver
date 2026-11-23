@@ -337,6 +337,7 @@ struct BillEditor: View {
     }
 }
 
+#if DEBUG
 #Preview("New bill") {
     NavigationStack { BillEditor { _ in } }
         .environment(\.repository, EditorPreviewSupport.repository(demo: false))
@@ -355,3 +356,4 @@ struct BillEditor: View {
 #Preview("Preset chips") {
     Form { BillPresetPicker(selectedName: "Gym") { _ in } }
 }
+#endif

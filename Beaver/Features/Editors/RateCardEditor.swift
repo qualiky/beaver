@@ -287,6 +287,7 @@ struct RateCardEditor: View {
     }
 }
 
+#if DEBUG
 #Preview("New") {
     NavigationStack { RateCardEditor { _ in } }
         .environment(\.repository, EditorPreviewSupport.repository(demo: false))
@@ -296,3 +297,4 @@ struct RateCardEditor: View {
     NavigationStack { RateCardEditor(card: DemoData.rateCard) { _ in } }
         .environment(\.repository, EditorPreviewSupport.repository())
 }
+#endif

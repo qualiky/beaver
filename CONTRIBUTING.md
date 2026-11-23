@@ -30,6 +30,8 @@ Check the engine's imports before you open a pull request:
 scripts/check-core-imports.sh
 ```
 
+Also run the Release build (`scripts/build-ipa.sh`) before you open a pull request.
+
 ## Where code goes
 
 - Business logic lives in `Packages/BeaverCore`. It uses Foundation only. No SwiftUI, GRDB or UIKit. The check script enforces this.

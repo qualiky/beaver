@@ -329,6 +329,7 @@ private struct TemplateRow: View {
     }
 }
 
+#if DEBUG
 #Preview("Demo template") {
     NavigationStack { TemplateEditor(sourceID: DemoData.sourceID, template: DemoData.template) { _ in } onDelete: {} }
         .environment(\.repository, EditorPreviewSupport.repository())
@@ -343,3 +344,4 @@ private struct TemplateRow: View {
     NavigationStack { TemplatesEditor(sourceID: DemoData.sourceID) }
         .environment(\.repository, EditorPreviewSupport.repository())
 }
+#endif
