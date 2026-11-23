@@ -1,9 +1,11 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @State private var exportBackup = false
+
     var body: some View {
         TabView {
-            WeekView()
+            WeekView(onBackUp: { exportBackup = true })
                 .tabItem { Label("Week", systemImage: "calendar") }
             RosterView()
                 .tabItem { Label("Roster", systemImage: "person.2") }
@@ -12,5 +14,7 @@ struct MainTabView: View {
             PlanView()
                 .tabItem { Label("Plan", systemImage: "flag") }
         }
+        .backupExportFlow(isPresented: $exportBackup)
+        .payReminderSync()
     }
 }
