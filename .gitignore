@@ -27,3 +27,6 @@ personal/
 .DS_Store
 .idea/
 .vscode/
+
+# Agent worktrees and local tool state
+.claude/
