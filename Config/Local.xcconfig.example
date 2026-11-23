@@ -1,0 +1,4 @@
+// Copy to Config/Local.xcconfig (git-ignored) and edit.
+// Keep the bundle ID fixed once installed, so a SideStore/AltStore refresh keeps your data.
+BEAVER_BUNDLE_ID = com.example.beaver
+DEVELOPMENT_TEAM = ABCDE12345

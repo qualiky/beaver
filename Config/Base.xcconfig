@@ -1,0 +1,5 @@
+// Shared build settings. Override locally in Config/Local.xcconfig (git-ignored).
+BEAVER_BUNDLE_ID = dev.beaver.app
+DEVELOPMENT_TEAM =
+
+#include? "Local.xcconfig"
