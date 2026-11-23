@@ -1,0 +1,29 @@
+# Xcode / XcodeGen
+*.xcodeproj
+*.xcworkspace
+!Packages/**/*.xcworkspace
+xcuserdata/
+DerivedData/
+build/
+*.ipa
+Payload/
+
+# SwiftPM
+.build/
+.swiftpm/
+Packages/**/Package.resolved
+
+# Local overrides (bundle id, signing)
+Local.xcconfig
+
+# Personal data never belongs in this repo
+*.sqlite
+*.sqlite-*
+backups/
+personal/
+*.backup.json
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
