@@ -17,7 +17,7 @@ struct OnboardingView: View {
                 .multilineTextAlignment(.center)
             Spacer()
             Button {
-                model.onboardingDone = true
+                model.completeOnboarding()
             } label: {
                 Text("Get started").frame(maxWidth: .infinity)
             }
