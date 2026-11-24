@@ -26,7 +26,7 @@ The app is **free and open source** (MIT). It has no backend, no accounts, no ba
 | Money | `Int` cents everywhere, through a `Money` value type. The currency code is a setting (default `AUD`); format only in the UI. Never use `Double` for stored money. |
 | Dates | Store as ISO strings (`YYYY-MM-DD`, `HH:mm`). Calculate with a `Calendar` using the user's chosen time zone (default: the device's), with Monday as the first weekday. Wall-clock shift times are never converted through UTC, so daylight saving changes don't shift them. |
 | Theme | System light/dark, Dynamic Type, SF Symbols, VoiceOver labels on every control. Must be usable one-handed. |
-| Bundle ID | Comes from the build setting `BEAVER_BUNDLE_ID`. Default `dev.beaver.app`, overridable through a git-ignored `Local.xcconfig`, so each person sideloading can use their own. |
+| Bundle ID | Comes from the build setting `BEAVER_BUNDLE_ID`. Default `au.com.fuzn.beaver`, overridable through a git-ignored `Local.xcconfig`, so each person sideloading can use their own. |
 
 ### Distribution
 - `scripts/build-ipa.sh`:
