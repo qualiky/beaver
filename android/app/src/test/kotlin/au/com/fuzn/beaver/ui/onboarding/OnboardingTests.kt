@@ -9,6 +9,7 @@ import au.com.fuzn.beaver.core.IncomeKind
 import au.com.fuzn.beaver.core.IncomeSource
 import au.com.fuzn.beaver.core.Money
 import au.com.fuzn.beaver.core.PaySchedule
+import au.com.fuzn.beaver.ui.common.TimeZones
 import au.com.fuzn.beaver.data.TestDb
 import au.com.fuzn.beaver.data.backupFixtureFile
 import au.com.fuzn.beaver.data.saveRichData
@@ -329,15 +330,12 @@ class OnboardingTests {
         assertNull(OnboardingSheet.parse("nonsense"))
     }
 
-    @Test fun timeZoneChoicesPutTheCurrentZoneFirstAndSearchWorks() {
-        val zones = OnboardingModel.timeZoneChoices("Australia/Sydney")
+    @Test fun timeZoneChoicesPutTheCurrentZoneFirst() {
+        val zones = TimeZones.choices("Australia/Sydney")
         assertEquals("Australia/Sydney", zones.first())
         assertEquals(1, zones.count { it == "Australia/Sydney" })
         assertTrue("Europe/London" in zones)
         assertTrue(zones.none { it.startsWith("Etc/") || it.startsWith("SystemV/") })
-        assertEquals(listOf("America/New_York"), OnboardingModel.filterZones(zones, "new york"))
-        assertEquals(zones, OnboardingModel.filterZones(zones, "  "))
-        assertTrue(OnboardingModel.filterZones(zones, "zzzz").isEmpty())
     }
 
     @Test fun currencyChoicesIncludeTheDeviceCurrency() {

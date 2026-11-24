@@ -205,3 +205,15 @@
 - **Re-run setup** shows `OnboardingLauncher`, which calls the first-launch `OnboardingScreen` until Onboarding offers a rerun-mode entry point; then change only that body.
 - **About** lists only libraries that ship: AndroidX, Kotlin, kotlinx.serialization, kotlinx.coroutines (all Apache 2.0). Test libraries are not listed.
 - **Follow-ups.** (1) Call `PayReminderSync(env)` once from the app shell so reminders follow edits on other tabs. (2) Switch `OnboardingLauncher` to the rerun-mode API. (3) "Back up now" opens Settings at the top; landing on the Data section needs a parameter on the slot.
+
+### Android integration
+
+- **Merge.** The merged tree compiled and passed on arrival. The two time zone pickers (onboarding's field with a dialog, Settings' full-screen list) became one file, `ui/common/TimeZonePicker.kt`: `TimeZones` (list, search, current zone first), `TimeZonePicker` (full screen) and `TimeZonePickerField` (opens the picker in a dialog). Onboarding's own zone helpers were removed.
+- **Roster tab** calls `RosterScreen(env.repository, onOpenSettings, modifier)`; `RosterTab(env, onOpenSettings, modifier)` in `Slots.kt`. Roster never opened its own database (only a `Repository` parameter), so nothing was removed there.
+- **Money field.** Roster's `RosterMoneyField` is gone; the Log pay sheet uses the shared `MoneyField`, and `RosterFormat.parseMoney` and `editableText` delegate to `MoneyParser`. Behaviour change: "12,5" and amounts with more than two decimals are now invalid, as in every other editor.
+- **Re-run setup** is `OnboardingFlow(env, OnboardingMode.Rerun, onFinished)`.
+- **Reminders.** `PayReminderSync(env)` is composed once in `BeaverApp`, not in Settings.
+- **Back up now.** `SettingsScreen(..., initialSection: SettingsSection? = null)`; `SettingsSection.Data` scrolls the list to the Data group once (`BringIntoViewRequester`). The gear and the Roster empty state open Settings at the top.
+- **Editor state survives rotation.** Each editor model (`Bill`, `Goal`, `RateCard`, `Template`, `Limits`, `IncomeSource`) implements `EditorStateSaving` (`saveState` / `restoreState`, Bundle-safe values only) and is kept with `rememberSaveable(saver = editorSaver { ... })`, no new dependency. A model restored from saved state is not overwritten by its async `load` (Goal, Limits, IncomeSource). `EditorSaverTests` round-trips every model through its Saver. Not saved: the open holiday and unavailable-range dialogs in Limits, and which screen the default weeks list shows.
+- **Single database.** Only `AppContainer` opens `BeaverDatabase` in `main`; nothing else needed routing.
+

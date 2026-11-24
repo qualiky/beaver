@@ -1,22 +1,15 @@
 package au.com.fuzn.beaver.ui.slots
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import au.com.fuzn.beaver.app.AppEnv
 import au.com.fuzn.beaver.ui.onboarding.OnboardingFlow
 import au.com.fuzn.beaver.ui.onboarding.OnboardingMode
+import au.com.fuzn.beaver.ui.roster.RosterScreen
 import au.com.fuzn.beaver.ui.settings.SettingsHost
+import au.com.fuzn.beaver.ui.settings.SettingsSection
 
-// HOOK POINTS for the screens other engineers are building. Each is a placeholder; replace its body with a call to
-// your screen (for example `RosterScreen(env, modifier)`). Keep the signature: BeaverApp calls these.
+// HOOK POINTS for the screens other engineers are building. Each is a thin call into its screen. BeaverApp calls these.
 //
 // Each screen lives in its own package under ui/ and reads everything from `env`:
 //   env.store      live settings / input / forecast (StateFlows)
@@ -27,7 +20,8 @@ import au.com.fuzn.beaver.ui.settings.SettingsHost
 
 /** Roster tab (BEAVER-25 to 28 on iOS). */
 @Composable
-fun RosterTab(env: AppEnv, modifier: Modifier = Modifier) = SlotPlaceholder("Roster", modifier)
+fun RosterTab(env: AppEnv, onOpenSettings: () -> Unit, modifier: Modifier = Modifier) =
+    RosterScreen(env.repository, onOpenSettings, modifier)
 
 /** Money tab: bills, spending and goals. */
 @Composable
@@ -38,8 +32,12 @@ fun MoneyTab(env: AppEnv, modifier: Modifier = Modifier) = au.com.fuzn.beaver.ui
  * [onClose] returns to the tabs. The system back button also closes it (handled by the shell).
  */
 @Composable
-fun SettingsScreen(env: AppEnv, onClose: () -> Unit, modifier: Modifier = Modifier) =
-    SettingsHost(env, onClose, modifier)
+fun SettingsScreen(
+    env: AppEnv,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier,
+    initialSection: SettingsSection? = null,
+) = SettingsHost(env, onClose, modifier, initialSection)
 
 /**
  * First-launch onboarding, shown while the persisted `onboardingDone` setting is false. Call [onFinished] when the
@@ -48,20 +46,3 @@ fun SettingsScreen(env: AppEnv, onClose: () -> Unit, modifier: Modifier = Modifi
 @Composable
 fun OnboardingScreen(env: AppEnv, onFinished: () -> Unit, modifier: Modifier = Modifier) =
     OnboardingFlow(env, OnboardingMode.FirstRun, onFinished, modifier)
-
-@Composable
-private fun SlotPlaceholder(
-    title: String,
-    modifier: Modifier,
-    actionLabel: String? = null,
-    onAction: () -> Unit = {},
-) {
-    Column(
-        modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text("$title (coming soon)")
-        if (actionLabel != null) Button(onClick = onAction) { Text(actionLabel) }
-    }
-}

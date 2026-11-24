@@ -3,6 +3,7 @@ package au.com.fuzn.beaver.ui.roster
 import au.com.fuzn.beaver.core.HoursWarning
 import au.com.fuzn.beaver.core.HoursWarningLevel
 import au.com.fuzn.beaver.core.Money
+import au.com.fuzn.beaver.ui.editors.MoneyParser
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.NumberFormat
@@ -71,35 +72,11 @@ object RosterFormat {
         }
     }
 
-    private val plainNumber = Regex("^(\\d+\\.?\\d*|\\.\\d+)$")
-
-    /**
-     * Parses what a person types into an amount field: "1,234.50", "$12", "12,5". Null if empty or invalid.
-     * Uses BigDecimal, so cents are exact, and rejects negatives, exponents and anything that is not a plain number.
-     */
-    fun parseMoney(text: String): Money? {
-        var s = text.trim().replace("$", "").replace(" ", "").replace(" ", "")
-        if (s.isEmpty()) return null
-        if ("," in s && "." !in s) {
-            val after = s.length - s.lastIndexOf(',') - 1
-            if (after <= 2) s = s.replace(',', '.')
-        }
-        s = s.replace(",", "")
-        if (!plainNumber.matches(s)) return null
-        return try {
-            Money(BigDecimal(s).setScale(2, RoundingMode.HALF_UP).unscaledValue().longValueExact())
-        } catch (_: ArithmeticException) {
-            null
-        }
-    }
+    /** Typed amount text as [Money] through the shared [MoneyParser] (exact cents, no Double). Null if empty or invalid. */
+    fun parseMoney(text: String): Money? = MoneyParser.cents(text)?.let(::Money)
 
     /** Money as plain editable text ("1234.50"), or empty for null. */
-    fun editableText(money: Money?): String {
-        if (money == null) return ""
-        val sign = if (money.cents < 0) "-" else ""
-        val c = Math.abs(money.cents)
-        return "$sign${c / 100}.${(c % 100).toString().padStart(2, '0')}"
-    }
+    fun editableText(money: Money?): String = if (money == null) "" else MoneyParser.text(money.cents)
 
     // region Dates and times
 

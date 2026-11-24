@@ -35,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -181,7 +182,7 @@ private fun PresetChip(preset: BillPreset, selected: Boolean, onSelect: (BillPre
 // region State holder
 
 /** State for the bill editor. All cadences; a monthly bill's day of the month follows its next due date. */
-class BillEditorModel(bill: Bill? = null, today: LocalDate = LocalDate.now()) {
+class BillEditorModel(bill: Bill? = null, today: LocalDate = LocalDate.now()) : EditorStateSaving {
     enum class Field { Name, Amount, Cadence, DueDate }
 
     val isNew: Boolean = bill == null
@@ -244,6 +245,23 @@ class BillEditorModel(bill: Bill? = null, today: LocalDate = LocalDate.now()) {
     init {
         // An existing monthly bill keeps its stored day, even if the due date was clamped to a short month.
         (bill?.cadence as? Cadence.Monthly)?.let { dayOfMonth = it.dayOfMonth }
+    }
+
+    override fun saveState(): ArrayList<Any?> = arrayListOf<Any?>(
+        name, amountText, dayOfMonth, cadenceKind.name, everyNDaysText, anchorDate.toString(), category.name, account,
+        isActive, note,
+    ).also {
+        it.putNullable(presetName)
+        touches.writeTo(it)
+    }
+
+    override fun restoreState(saved: List<Any?>) {
+        val r = SavedReader(saved)
+        nameState = r.string(); amountState = r.string(); dayOfMonth = r.int()
+        cadenceKindState = r.enum(BillCadenceKind.entries.toTypedArray()); everyNDaysState = r.string()
+        anchorState = r.date(); category = r.enum(BillCategory.entries.toTypedArray()); account = r.string()
+        isActive = r.bool(); note = r.string(); presetName = r.nullableString()
+        touches.readFrom(r, Field.entries)
     }
 
     /** The field's issue, only once it has been edited or a save was attempted. */
@@ -397,7 +415,10 @@ fun BillEditor(
     currencyCode: String = "AUD",
     onDeleted: (() -> Unit)? = null,
 ) {
-    val model = remember(bill?.id) { BillEditorModel(bill).also { m -> preset?.let(m::apply) } }
+    val model = rememberSaveable(
+        bill?.id,
+        saver = editorSaver { BillEditorModel(bill) },
+    ) { BillEditorModel(bill).also { m -> preset?.let(m::apply) } }
     val runner = rememberEditorRunner()
     EditorScaffold(
         title = if (model.isNew) "New bill" else "Edit bill",

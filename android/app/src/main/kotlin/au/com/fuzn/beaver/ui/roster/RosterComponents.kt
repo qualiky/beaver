@@ -128,31 +128,3 @@ internal fun DifferenceLabel(difference: Money, currency: String, modifier: Modi
         Text(" $text", color = color, style = MaterialTheme.typography.bodyMedium.merge(TabularNumbers))
     }
 }
-
-/**
- * A simple money text field: decimal keyboard, right-aligned tabular digits, and an error when the text is not a
- * valid non-negative amount. The text is parsed to cents with [RosterFormat.parseMoney] (BigDecimal, no Double).
- * Local to the Roster screen; the shared `MoneyField` replaces it after the merge.
- */
-@Composable
-internal fun RosterMoneyField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    optional: Boolean = false,
-) {
-    val invalid = value.isNotBlank() && RosterFormat.parseMoney(value) == null
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier,
-        label = { Text(if (optional) "$label (optional)" else label) },
-        singleLine = true,
-        isError = invalid,
-        supportingText = if (invalid) ({ Text("Enter an amount like 1234.50") }) else null,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        textStyle = MaterialTheme.typography.bodyLarge.merge(TabularNumbers).copy(textAlign = TextAlign.End),
-        placeholder = { Text("0.00", style = TabularNumbers) },
-    )
-}

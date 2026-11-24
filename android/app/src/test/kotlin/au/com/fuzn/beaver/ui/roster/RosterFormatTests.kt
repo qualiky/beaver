@@ -16,9 +16,9 @@ class RosterFormatTests {
     @Test fun moneyParsingIsCentsSafe() {
         assertEquals(Money(123450), RosterFormat.parseMoney("1,234.50"))
         assertEquals(Money(1200), RosterFormat.parseMoney("$12"))
-        assertEquals(Money(1250), RosterFormat.parseMoney("12,5"))
+        assertNull(RosterFormat.parseMoney("12,5")) // shared parser: a comma only groups thousands
         assertEquals(Money(123400), RosterFormat.parseMoney("1,234"))
-        assertEquals(Money(1), RosterFormat.parseMoney("0.005"))
+        assertNull(RosterFormat.parseMoney("0.005")) // more than two decimals
         assertEquals(Money(1999), RosterFormat.parseMoney("19.99"))
         assertEquals(Money(50), RosterFormat.parseMoney(".5"))
         assertNull(RosterFormat.parseMoney(""))

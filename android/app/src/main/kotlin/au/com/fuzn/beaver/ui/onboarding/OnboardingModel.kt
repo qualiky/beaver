@@ -420,22 +420,6 @@ class OnboardingModel(
         fun defaultDeviceCurrency(locale: Locale = Locale.getDefault()): String? =
             runCatching { Currency.getInstance(locale).currencyCode }.getOrNull()
 
-        /** Zone ids offered in the picker: region zones plus UTC, sorted, with [current] first. */
-        fun timeZoneChoices(current: String, available: Set<String> = ZoneId.getAvailableZoneIds()): List<String> {
-            val regions = setOf(
-                "Africa", "America", "Antarctica", "Arctic", "Asia", "Atlantic", "Australia", "Europe", "Indian", "Pacific",
-            )
-            val all = available.filter { it == "UTC" || it.substringBefore('/') in regions }.sorted()
-            return listOf(current) + all.filter { it != current }
-        }
-
-        /** Zone ids that match a typed search (case-insensitive; underscores read as spaces), keeping order. */
-        fun filterZones(zones: List<String>, query: String): List<String> {
-            val q = query.trim().lowercase(Locale.ROOT)
-            if (q.isEmpty()) return zones
-            return zones.filter { it.replace('_', ' ').lowercase(Locale.ROOT).contains(q) }
-        }
-
         /** Keeps the step, typed fields and open editor across rotation and process death. */
         fun saver(create: () -> OnboardingModel): Saver<OnboardingModel, Any> = listSaver(
             save = { m ->

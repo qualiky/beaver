@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -107,7 +108,7 @@ data class RateRuleDraft(
  * State for the rate card editor. Plain Kotlin on Compose snapshot state: no Android types, so it runs on the JVM.
  * Pristine forms show no errors; [visibleNameIssue] and friends reveal them after an edit or a save attempt.
  */
-class RateCardEditorModel(card: RateCard? = null, id: Int = card?.id ?: 0) {
+class RateCardEditorModel(card: RateCard? = null, id: Int = card?.id ?: 0) : EditorStateSaving {
     var id: Int = id
         private set
 
@@ -131,6 +132,26 @@ class RateCardEditorModel(card: RateCard? = null, id: Int = card?.id ?: 0) {
 
     fun revealAllIssues() {
         revealAll = true
+    }
+
+    override fun saveState(): ArrayList<Any?> = arrayListOf<Any?>(id, name, nameTouched, rulesTouched, revealAll).also { out ->
+        out.putList(rules) { d ->
+            add(d.id); add(d.band); add(d.rateText); add(d.days.name); add(d.hasWindow)
+            add(d.fromMinute); add(d.toMinute); add(d.bandTouched); add(d.rateTouched)
+        }
+    }
+
+    override fun restoreState(saved: List<Any?>) {
+        val r = SavedReader(saved)
+        id = r.int(); nameState = r.string(); nameTouched = r.bool(); rulesTouched = r.bool(); revealAll = r.bool()
+        val restored = r.list {
+            RateRuleDraft(
+                id = string(), band = string(), rateText = string(), days = enum(DaySelector.entries.toTypedArray()),
+                hasWindow = bool(), fromMinute = int(), toMinute = int(), bandTouched = bool(), rateTouched = bool(),
+            )
+        }
+        rules.clear()
+        rules.addAll(restored)
     }
 
     val visibleNameIssue: String? get() = if (nameTouched || revealAll) nameIssue else null
@@ -370,7 +391,7 @@ fun RateCardEditor(
     card: RateCard? = null,
     currencyCode: String = "AUD",
 ) {
-    val model = remember(card?.id) { RateCardEditorModel(card) }
+    val model = rememberSaveable(card?.id, saver = editorSaver { RateCardEditorModel(card) }) { RateCardEditorModel(card) }
     val runner = rememberEditorRunner()
     EditorScaffold(
         title = "Rate card", canSave = model.isValid, onCancel = onDismiss, modifier = modifier, runner = runner,

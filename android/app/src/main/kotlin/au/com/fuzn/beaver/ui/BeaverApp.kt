@@ -39,12 +39,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import au.com.fuzn.beaver.app.AppContainer
 import au.com.fuzn.beaver.app.AppEnv
+import au.com.fuzn.beaver.reminders.PayReminderSync
 import au.com.fuzn.beaver.ui.common.StartupErrorBanner
 import au.com.fuzn.beaver.ui.plan.PlanScreen
 import au.com.fuzn.beaver.ui.slots.MoneyTab
 import au.com.fuzn.beaver.ui.slots.OnboardingScreen
 import au.com.fuzn.beaver.ui.slots.RosterTab
 import au.com.fuzn.beaver.ui.slots.SettingsScreen
+import au.com.fuzn.beaver.ui.settings.SettingsSection
 import au.com.fuzn.beaver.ui.week.WeekScreen
 import kotlinx.coroutines.launch
 
@@ -92,7 +94,11 @@ fun BeaverApp(env: AppEnv) {
     val settings by env.store.settings.collectAsState()
     val scope = rememberCoroutineScope()
     var showSettings by rememberSaveable { mutableStateOf(false) }
+    var settingsAtData by rememberSaveable { mutableStateOf(false) }
     var selected by rememberSaveable { mutableStateOf(Tab.Week) }
+
+    // Reschedules payday reminders whenever the forecast or settings change, on any tab (a no-op while the toggle is off).
+    PayReminderSync(env)
 
     if (!settings.onboardingDone) {
         OnboardingScreen(env, onFinished = { scope.launch { env.repository.setOnboardingDone(true) } })
@@ -100,7 +106,11 @@ fun BeaverApp(env: AppEnv) {
     }
     if (showSettings) {
         BackHandler { showSettings = false }
-        SettingsScreen(env, onClose = { showSettings = false })
+        SettingsScreen(
+            env,
+            onClose = { showSettings = false },
+            initialSection = if (settingsAtData) SettingsSection.Data else null,
+        )
         return
     }
 
@@ -109,7 +119,7 @@ fun BeaverApp(env: AppEnv) {
             TopAppBar(
                 title = { Text(selected.label) },
                 actions = {
-                    IconButton(onClick = { showSettings = true }) {
+                    IconButton(onClick = { settingsAtData = false; showSettings = true }) {
                         Icon(Icons.Filled.Settings, contentDescription = "Settings")
                     }
                 },
@@ -131,8 +141,8 @@ fun BeaverApp(env: AppEnv) {
         val content = Modifier.padding(padding)
         when (selected) {
             // "Back up now" opens Settings, where the export lives.
-            Tab.Week -> WeekScreen(env, onBackUp = { showSettings = true }, modifier = content)
-            Tab.Roster -> RosterTab(env, content)
+            Tab.Week -> WeekScreen(env, onBackUp = { settingsAtData = true; showSettings = true }, modifier = content)
+            Tab.Roster -> RosterTab(env, onOpenSettings = { settingsAtData = false; showSettings = true }, modifier = content)
             Tab.Money -> MoneyTab(env, content)
             Tab.Plan -> PlanScreen(env, content)
         }

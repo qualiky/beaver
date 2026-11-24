@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -26,7 +27,7 @@ class GoalEditorModel(
     isPrimary: Boolean = false,
     isFirstGoal: Boolean = true,
     today: LocalDate = LocalDate.now(),
-) {
+) : EditorStateSaving {
     enum class Field { Name, Target, Deadline, Saved }
 
     val isNew: Boolean = goal == null
@@ -65,13 +66,28 @@ class GoalEditorModel(
 
     var makePrimary by mutableStateOf(if (goal == null) isFirstGoal else isPrimary)
 
+    /** True once typed state was restored, so [load] does not overwrite it. */
+    private var restored = false
+
+    override fun saveState(): ArrayList<Any?> = arrayListOf<Any?>(
+        name, targetText, hasDeadline, deadline.toString(), savedText, makePrimary, today.toString(),
+    ).also { touches.writeTo(it) }
+
+    override fun restoreState(saved: List<Any?>) {
+        val r = SavedReader(saved)
+        nameState = r.string(); targetState = r.string(); hasDeadline = r.bool(); deadlineState = r.date()
+        savedState = r.string(); makePrimary = r.bool(); today = r.date()
+        touches.readFrom(r, Field.entries)
+        restored = true
+    }
+
     /** Loads whether this goal is primary and whether other goals exist, using the settings time zone for today. */
     suspend fun load(repository: Repository) {
         val settings = repository.settings()
         val newToday = LocalDate.now(settings.timeZone)
-        if (!touches.shows(Field.Deadline) && !hasDeadline) deadlineState = newToday.plusMonths(6)
+        if (!restored && !touches.shows(Field.Deadline) && !hasDeadline) deadlineState = newToday.plusMonths(6)
         today = newToday
-        makePrimary = if (isNew) repository.goals().isEmpty() else settings.primaryGoalId == id
+        if (!restored) makePrimary = if (isNew) repository.goals().isEmpty() else settings.primaryGoalId == id
     }
 
     fun visibleIssue(field: Field): String? = if (touches.shows(field)) issue(field) else null
@@ -187,7 +203,7 @@ fun GoalEditor(
     currencyCode: String = "AUD",
     onDeleted: (() -> Unit)? = null,
 ) {
-    val model = remember(goal?.id) { GoalEditorModel(goal) }
+    val model = rememberSaveable(goal?.id, saver = editorSaver { GoalEditorModel(goal) }) { GoalEditorModel(goal) }
     val runner = rememberEditorRunner()
     LaunchedEffect(model) { runCatching { model.load(repository) } }
     EditorScaffold(

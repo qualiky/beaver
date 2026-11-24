@@ -1,5 +1,7 @@
 package au.com.fuzn.beaver.ui.roster
 
+import au.com.fuzn.beaver.ui.editors.MoneyField
+import au.com.fuzn.beaver.ui.editors.MoneyParser
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -101,9 +103,9 @@ internal fun LogPayForm(
         }
 
         Text("Actual pay", style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-        RosterMoneyField("Net received", log.netText, { log.netText = it }, Modifier.fillMaxWidth())
-        RosterMoneyField("Gross", log.grossText, { log.grossText = it }, Modifier.fillMaxWidth(), optional = true)
-        RosterMoneyField("Tax", log.taxText, { log.taxText = it }, Modifier.fillMaxWidth(), optional = true)
+        LogMoneyField("Net received", log.netText, { log.netText = it }, currency)
+        LogMoneyField("Gross", log.grossText, { log.grossText = it }, currency, optional = true)
+        LogMoneyField("Tax", log.taxText, { log.taxText = it }, currency, optional = true)
         OutlinedTextField(
             value = log.note, onValueChange = { log.note = it }, Modifier.fillMaxWidth(),
             label = { Text("Note") }, minLines = 1, maxLines = 3,
@@ -161,4 +163,24 @@ private fun RecentPayRow(row: PayRow, currency: String, onTap: () -> Unit, onDel
             Icon(Icons.Filled.Delete, contentDescription = "Delete pay for ${row.sourceName} on ${RosterFormat.day(row.pay.payDate)}")
         }
     }
+}
+
+/** The shared [MoneyField] with the Roster's "optional" label and invalid-amount message. */
+@Composable
+private fun LogMoneyField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    currency: String,
+    optional: Boolean = false,
+) {
+    val invalid = value.isNotBlank() && MoneyParser.cents(value) == null
+    MoneyField(
+        label = if (optional) "$label (optional)" else label,
+        value = value,
+        onValueChange = onValueChange,
+        modifier = Modifier.fillMaxWidth(),
+        currencyCode = currency,
+        error = if (invalid) "Enter an amount like 1234.50" else null,
+    )
 }

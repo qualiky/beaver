@@ -1,5 +1,11 @@
 package au.com.fuzn.beaver.ui.settings
 
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -86,7 +92,20 @@ val CURRENCIES = listOf("AUD", "NZD", "USD", "GBP", "EUR", "CAD", "SGD", "JPY")
 
 /** The scrolling content of the Settings screen: income, rate cards, tax tables, bills, goals, preferences, data, About. */
 @Composable
-fun SettingsListContent(data: SettingsListData, actions: SettingsListActions, modifier: Modifier = Modifier) {
+fun SettingsListContent(
+    data: SettingsListData,
+    actions: SettingsListActions,
+    modifier: Modifier = Modifier,
+    scrollTo: SettingsSection? = null,
+) {
+    val dataPosition = remember { BringIntoViewRequester() }
+    var scrolled by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(scrollTo) {
+        if (scrollTo == SettingsSection.Data && !scrolled) {
+            scrolled = true
+            dataPosition.bringIntoView()
+        }
+    }
     val input = data.input
     val currency = data.settings.currency
     val fmt = FigureFormatter(currency)
@@ -171,18 +190,20 @@ fun SettingsListContent(data: SettingsListData, actions: SettingsListActions, mo
             SettingsRow("Re-run setup", icon = Icons.Filled.Replay, onClick = { actions.open(SettingsRoute.Setup) })
         }
 
-        Group("Data", footer = "Export a backup regularly. If you uninstall the app, your data goes with it.") {
-            SettingsRow("Export backup", icon = Icons.Filled.FileUpload, onClick = actions.export)
-            Text(
-                data.lastExportedText,
-                Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            HorizontalDivider()
-            SettingsRow("Import backup", icon = Icons.Filled.FileDownload, onClick = actions.import)
-            SettingsRow("Load demo data", icon = Icons.Filled.AutoFixHigh, onClick = actions.loadDemo)
-            SettingsRow("Erase all data", icon = Icons.Filled.DeleteForever, destructive = true, onClick = actions.erase)
+        Box(Modifier.bringIntoViewRequester(dataPosition)) {
+            Group("Data", footer = "Export a backup regularly. If you uninstall the app, your data goes with it.") {
+                SettingsRow("Export backup", icon = Icons.Filled.FileUpload, onClick = actions.export)
+                Text(
+                    data.lastExportedText,
+                    Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                HorizontalDivider()
+                SettingsRow("Import backup", icon = Icons.Filled.FileDownload, onClick = actions.import)
+                SettingsRow("Load demo data", icon = Icons.Filled.AutoFixHigh, onClick = actions.loadDemo)
+                SettingsRow("Erase all data", icon = Icons.Filled.DeleteForever, destructive = true, onClick = actions.erase)
+            }
         }
 
         Group(

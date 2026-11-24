@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -83,7 +84,7 @@ class TemplateEditorModel(
     sourceId: Int,
     template: Template? = null,
     today: LocalDate = LocalDate.now(),
-) {
+) : EditorStateSaving {
     val isNew: Boolean = template == null
     val id: Int = template?.id ?: 0
     val sourceId: Int = template?.sourceID ?: sourceId
@@ -105,6 +106,25 @@ class TemplateEditorModel(
         private set
 
     fun revealAllIssues() { revealAll = true }
+
+    override fun saveState(): ArrayList<Any?> = arrayListOf<Any?>(
+        name, hasEffectiveFrom, effectiveFrom.toString(), nameTouched, shiftsTouched, revealAll,
+    ).also { out ->
+        out.putList(shifts) { s ->
+            add(s.id); add(s.weekday.name); add(s.start.toString()); add(s.end.toString()); add(s.breakMinutes)
+        }
+    }
+
+    override fun restoreState(saved: List<Any?>) {
+        val r = SavedReader(saved)
+        nameState = r.string(); hasEffectiveFrom = r.bool(); effectiveFrom = r.date()
+        nameTouched = r.bool(); shiftsTouched = r.bool(); revealAll = r.bool()
+        val restored = r.list {
+            TemplateShiftDraft(id = string(), weekday = enum(DayOfWeek.entries.toTypedArray()), start = time(), end = time(), breakMinutes = int())
+        }
+        shifts.clear()
+        shifts.addAll(restored)
+    }
 
     val visibleNameIssue: String? get() = if (nameTouched || revealAll) nameIssue else null
     val visibleShiftsIssue: String? get() = if (shiftsTouched || revealAll) shiftsIssue else null
@@ -270,7 +290,10 @@ fun TemplateEditor(
     template: Template? = null,
     onDeleted: (() -> Unit)? = null,
 ) {
-    val model = remember(template?.id, sourceId) { TemplateEditorModel(sourceId, template) }
+    val model = rememberSaveable(
+        template?.id, sourceId,
+        saver = editorSaver { TemplateEditorModel(sourceId, template) },
+    ) { TemplateEditorModel(sourceId, template) }
     val runner = rememberEditorRunner()
     EditorScaffold(
         title = if (model.isNew) "New default week" else "Edit default week",

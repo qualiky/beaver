@@ -37,9 +37,9 @@ import androidx.compose.ui.semantics.semantics
 import au.com.fuzn.beaver.app.AppEnv
 import au.com.fuzn.beaver.core.WithholdingTable
 import au.com.fuzn.beaver.reminders.PayReminderScheduler
-import au.com.fuzn.beaver.reminders.PayReminderSync
 import au.com.fuzn.beaver.reminders.ReminderPrefs
 import au.com.fuzn.beaver.reminders.notificationsAllowed
+import au.com.fuzn.beaver.ui.common.TimeZonePicker
 import au.com.fuzn.beaver.ui.editors.BillEditor
 import au.com.fuzn.beaver.ui.editors.GoalEditor
 import au.com.fuzn.beaver.ui.editors.IncomeSourceEditor
@@ -49,13 +49,21 @@ import au.com.fuzn.beaver.ui.editors.TemplatesEditor
 import kotlinx.coroutines.launch
 import java.time.Instant
 
+/** A part of the Settings list the screen can open scrolled to. */
+enum class SettingsSection { Data }
+
 /**
  * Settings: a full screen with its own top bar. Sub-screens (editors, the time zone list, re-run setup) replace the
  * list in place and the system back button steps back to it. Where it is showing survives rotation.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsHost(env: AppEnv, onClose: () -> Unit, modifier: Modifier = Modifier) {
+fun SettingsHost(
+    env: AppEnv,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier,
+    initialSection: SettingsSection? = null,
+) {
     val context = LocalContext.current
     val resolver = context.contentResolver
     val scope = rememberCoroutineScope()
@@ -77,9 +85,6 @@ fun SettingsHost(env: AppEnv, onClose: () -> Unit, modifier: Modifier = Modifier
     // The tables screen needs the built-in table too, which the engine input leaves out.
     var tables by remember { mutableStateOf<List<WithholdingTable>?>(null) }
     LaunchedEffect(input.withholdingTables) { tables = env.repository.withholdingTables() }
-
-    // Keeps scheduled reminders in step with the forecast while Settings is open (a no-op while the toggle is off).
-    PayReminderSync(env)
 
     // region Reminder toggle
     val prefs = remember { ReminderPrefs.of(context) }
@@ -152,6 +157,7 @@ fun SettingsHost(env: AppEnv, onClose: () -> Unit, modifier: Modifier = Modifier
         ) { inner ->
             Column(Modifier.padding(inner).verticalScroll(rememberScrollState())) {
                 SettingsListContent(
+                    scrollTo = initialSection,
                     data = SettingsListData(
                         input = input,
                         settings = settings,

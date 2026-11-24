@@ -25,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,7 +56,7 @@ data class LimitsValue(
  * everything. It cannot save before the stored values have loaded ([isLoaded]), so it never wipes data by mistake.
  * Only one fortnight limit is kept: a save deletes the others.
  */
-class LimitsEditorModel(value: LimitsValue? = null, today: LocalDate = LocalDate.now()) {
+class LimitsEditorModel(value: LimitsValue? = null, today: LocalDate = LocalDate.now()) : EditorStateSaving {
     enum class Field { Hours }
 
     var hasLimit by mutableStateOf(false)
@@ -82,6 +83,26 @@ class LimitsEditorModel(value: LimitsValue? = null, today: LocalDate = LocalDate
     private var original = LimitsValue()
     private var nextTempId = -1
 
+    /** True once typed state was restored, so [load] keeps it and only records what is stored. */
+    private var formRestored = false
+
+    override fun saveState(): ArrayList<Any?> = arrayListOf<Any?>(
+        hasLimit, hoursText, effectiveFrom.toString(), nextTempId,
+    ).also { out ->
+        out.putList(holidays) { add(it.date.toString()); add(it.name) }
+        out.putList(unavailable) { add(it.id); add(it.from.toString()); add(it.to.toString()); add(it.note) }
+        touches.writeTo(out)
+    }
+
+    override fun restoreState(saved: List<Any?>) {
+        val r = SavedReader(saved)
+        hasLimit = r.bool(); hoursState = r.string(); effectiveFrom = r.date(); nextTempId = r.int()
+        holidays = r.list { Holiday(date = date(), name = string()) }
+        unavailable = r.list { UnavailableRange(id = int(), from = date(), to = date(), note = string()) }
+        touches.readFrom(r, Field.entries)
+        formRestored = true
+    }
+
     init {
         if (value != null) apply(value)
     }
@@ -100,7 +121,13 @@ class LimitsEditorModel(value: LimitsValue? = null, today: LocalDate = LocalDate
     suspend fun load(repository: Repository) {
         if (isLoaded) return
         val limit = repository.hoursLimits().maxByOrNull { it.effectiveFrom }
-        apply(LimitsValue(limit, repository.holidays(), repository.unavailableRanges()))
+        val stored = LimitsValue(limit, repository.holidays(), repository.unavailableRanges())
+        if (formRestored) {
+            original = stored
+            isLoaded = true
+        } else {
+            apply(stored)
+        }
     }
 
     // Validation
@@ -394,7 +421,7 @@ fun LimitsEditor(
     modifier: Modifier = Modifier,
     value: LimitsValue? = null,
 ) {
-    val model = remember { LimitsEditorModel(value) }
+    val model = rememberSaveable(saver = editorSaver { LimitsEditorModel(value) }) { LimitsEditorModel(value) }
     val runner = rememberEditorRunner()
     LaunchedEffect(model) { model.load(repository) }
     EditorScaffold(

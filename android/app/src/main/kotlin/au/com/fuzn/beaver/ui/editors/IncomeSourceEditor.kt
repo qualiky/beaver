@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -46,7 +47,7 @@ class IncomeSourceEditorModel(
     source: IncomeSource? = null,
     newKind: IncomeKind = IncomeKind.hourly,
     today: LocalDate = LocalDate.now(),
-) {
+) : EditorStateSaving {
     enum class Field { Name, Rates, Amount, Schedule, Tax, SoftCap, HardCap }
 
     val isNew: Boolean = source == null
@@ -135,12 +136,37 @@ class IncomeSourceEditorModel(
         }
     }
 
+    /** True once typed state was restored, so [load] does not replace the typed rate card. */
+    private var formRestored = false
+
+    override fun saveState(): ArrayList<Any?> = arrayListOf<Any?>(
+        name, kind.name, fixedAmountText, amountIsNet, isActive, softCapText, hardCapText, scheduleKind.name,
+        payWeekday.name, lagWeeks, anchorPayday.toString(), dayOfMonth, taxKind.name, flatPercentText,
+    ).also {
+        it.putNullable(tableId)
+        touches.writeTo(it)
+        it.add(rateCard.saveState())
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun restoreState(saved: List<Any?>) {
+        val r = SavedReader(saved)
+        nameState = r.string(); kindState = r.enum(IncomeKind.entries.toTypedArray()); fixedAmountState = r.string()
+        amountIsNet = r.bool(); isActive = r.bool(); softCapState = r.string(); hardCapState = r.string()
+        scheduleKind = r.enum(IncomeScheduleKind.entries.toTypedArray()); payWeekday = r.enum(DayOfWeek.entries.toTypedArray())
+        lagWeeks = r.int(); anchorPayday = r.date(); dayOfMonth = r.int()
+        taxKindState = r.enum(IncomeTaxKind.entries.toTypedArray()); flatPercentState = r.string(); tableId = r.nullableString()
+        touches.readFrom(r, Field.entries)
+        rateCard.restoreState(saved.last() as List<Any?>)
+        formRestored = true
+    }
+
     /** Loads withholding tables and the existing rate card. Call once before the form is used. */
     suspend fun load(repository: Repository) {
         tables.clear()
         tables.addAll(repository.withholdingTables())
         existingRateCardId?.let { cardId ->
-            repository.rateCards().firstOrNull { it.id == cardId }?.let { rateCard.adopt(it) }
+            repository.rateCards().firstOrNull { it.id == cardId }?.let { if (!formRestored) rateCard.adopt(it) }
         }
         if (taxKind == IncomeTaxKind.Table && tableId == null) tableId = tables.firstOrNull()?.id
         isLoaded = true
@@ -429,7 +455,10 @@ fun IncomeSourceEditor(
     onDeleted: (() -> Unit)? = null,
     onEditTemplates: ((sourceId: Int) -> Unit)? = null,
 ) {
-    val model = remember(source?.id) { IncomeSourceEditorModel(source, kind) }
+    val model = rememberSaveable(
+        source?.id,
+        saver = editorSaver { IncomeSourceEditorModel(source, kind) },
+    ) { IncomeSourceEditorModel(source, kind) }
     val runner = rememberEditorRunner()
     LaunchedEffect(model) { model.load(repository) }
     EditorScaffold(
