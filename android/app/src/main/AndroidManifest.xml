@@ -3,6 +3,9 @@
 
     <!-- Beaver is offline-only: no INTERNET permission, by design. -->
 
+    <!-- Asked at runtime (Android 13+) only when the payday-eve reminder is switched on. Notifications are local. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".app.BeaverApplication"
         android:allowBackup="false"

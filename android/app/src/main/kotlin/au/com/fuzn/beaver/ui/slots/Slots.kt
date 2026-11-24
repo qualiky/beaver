@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import au.com.fuzn.beaver.app.AppEnv
+import au.com.fuzn.beaver.ui.settings.SettingsHost
 
 // HOOK POINTS for the screens other engineers are building. Each is a placeholder; replace its body with a call to
 // your screen (for example `RosterScreen(env, modifier)`). Keep the signature: BeaverApp calls these.
@@ -36,7 +37,7 @@ fun MoneyTab(env: AppEnv, modifier: Modifier = Modifier) = SlotPlaceholder("Mone
  */
 @Composable
 fun SettingsScreen(env: AppEnv, onClose: () -> Unit, modifier: Modifier = Modifier) =
-    SlotPlaceholder("Settings", modifier, actionLabel = "Close", onAction = onClose)
+    SettingsHost(env, onClose, modifier)
 
 /**
  * First-launch onboarding, shown while the persisted `onboardingDone` setting is false. Call [onFinished] when the
