@@ -23,6 +23,12 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
+// The shared golden fixture (fixtures/golden.json at the repo root). Tests read exactly this file, never a copy;
+// declaring it as an input makes Gradle re-run the tests whenever the fixture changes.
+val goldenFixture = layout.projectDirectory.file("../../fixtures/golden.json").asFile
+
 tasks.test {
     useJUnitPlatform()
+    systemProperty("beaver.fixture.path", goldenFixture.absolutePath)
+    inputs.file(goldenFixture).withPropertyName("goldenFixture")
 }
