@@ -95,3 +95,12 @@
 - **Summary.** Uses `AppStore.forecast` (reloaded after every change). With a goal: "$X ahead", "$X behind by <deadline>" or "Right on target". Without: "Weekly surplus ≈ $X" (or "Weekly shortfall") from income minus bills minus living, not from a single forecast week, because pay timing makes one week misleading.
 - **Salary preconfiguration.** `IncomeSourceEditor` has no kind parameter, so "Salary / fixed amount" opens it with a blank fixed draft (id 0, saved as new). The editor then reads "Edit income" and shows a Delete row. Hourly opens with `source: nil` (its default kind). A `kind:` initializer would remove both warts.
 - **Usual week.** After a new hourly source is saved, an alert offers "Set your usual week (optional)" and opens `TemplatesEditor` as a sheet. Hourly rows also have a "Usual week" swipe action.
+
+## Golden fixtures (BEAVER-56)
+
+- **One shared file.** The SPEC section 6 cases live in `fixtures/golden.json` (`fixtureVersion` 1, described in `fixtures/README.md`). Swift tests load it through `#filePath` (walking up to the repo root), so there is no copied resource and `Package.swift` is unchanged. A Kotlin port must pass the same file unchanged.
+- **Where expected values came from.** They were generated once from the passing Swift engine with a temporary test (since deleted), then checked against the SPEC numbers: shift grosses, test 1 and 2 and 7 weeks, withholding samples and the forecast totals all agree. The fixture also records `requiredPerPayday` 31579 (600000 / 19, rounded half up), which SPEC gives only as a formula.
+- **No floats.** Withholding coefficients are decimal strings (`"0.1600"`); the Swift loader turns them into ten-thousandths by string parsing. Hours are minutes, or hours x 100.
+- **Template weeks as shifts.** Weeks 2 and 7 list the expanded shifts, so a port does not need the template expander to run them. The forecast case keeps the template as data, since it tests the expander.
+- **Day selector name.** The fixture says `weekday`; the Swift enum case is `weekdays`. The loader maps it.
+- **Test shape.** One `@Test` per SPEC test number still, plus fixture integrity tests (version, SPEC coverage 1 to 14, unique ids, and that the fixture rate card, table, holidays and demo input equal `DemoData`). The edge-case tests are untouched.
