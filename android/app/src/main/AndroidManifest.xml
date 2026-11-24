@@ -4,6 +4,7 @@
     <!-- Beaver is offline-only: no INTERNET permission, by design. -->
 
     <application
+        android:name=".app.BeaverApplication"
         android:allowBackup="false"
         android:label="@string/app_name"
         android:supportsRtl="true"
