@@ -11,6 +11,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import au.com.fuzn.beaver.app.AppEnv
+import au.com.fuzn.beaver.ui.onboarding.OnboardingFlow
+import au.com.fuzn.beaver.ui.onboarding.OnboardingMode
 
 // HOOK POINTS for the screens other engineers are building. Each is a placeholder; replace its body with a call to
 // your screen (for example `RosterScreen(env, modifier)`). Keep the signature: BeaverApp calls these.
@@ -44,7 +46,7 @@ fun SettingsScreen(env: AppEnv, onClose: () -> Unit, modifier: Modifier = Modifi
  */
 @Composable
 fun OnboardingScreen(env: AppEnv, onFinished: () -> Unit, modifier: Modifier = Modifier) =
-    SlotPlaceholder("Onboarding", modifier, actionLabel = "Finish setup", onAction = onFinished)
+    OnboardingFlow(env, OnboardingMode.FirstRun, onFinished, modifier)
 
 @Composable
 private fun SlotPlaceholder(
