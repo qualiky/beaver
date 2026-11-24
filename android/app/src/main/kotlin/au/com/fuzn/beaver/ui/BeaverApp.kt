@@ -23,11 +23,16 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import au.com.fuzn.beaver.data.BeaverDatabase
+import au.com.fuzn.beaver.data.Repository
+import au.com.fuzn.beaver.ui.roster.RosterScreen
 
 enum class Tab(val label: String, val icon: ImageVector) {
     Week("Week", Icons.Filled.CalendarMonth),
@@ -48,6 +53,9 @@ fun BeaverApp() {
         PlaceholderScreen("Onboarding", actionLabel = "Finish setup") { onboardingDone = true }
         return
     }
+    // Roster only for now: the app wiring (shared Repository/AppStore) replaces this when the shell is finished.
+    val context = LocalContext.current
+    val repository = remember { Repository(BeaverDatabase.open(context)) }
     if (showSettings) {
         PlaceholderScreen("Settings", actionLabel = "Close") { showSettings = false }
         return
@@ -77,8 +85,12 @@ fun BeaverApp() {
             }
         },
     ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-            Text("${selected.label} (placeholder)")
+        if (selected == Tab.Roster) {
+            RosterScreen(repository, onOpenSettings = { showSettings = true }, modifier = Modifier.fillMaxSize().padding(padding))
+        } else {
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Text("${selected.label} (placeholder)")
+            }
         }
     }
 }
