@@ -32,3 +32,12 @@ The data is fictional (demo persona "Sam"). It contains no real personal or empl
 
 - Swift: `cd Packages/BeaverCore && swift test`. The tests read the file through `#filePath`, so there is no copy.
 - Kotlin: load `fixtures/golden.json` from the repo root and assert every case the same way.
+
+## demo-backup-v1.json
+
+`demo-backup-v1.json` is a real backup document (`schemaVersion` 1) of the fictional demo persona "Sam", written by the **iOS** `Backup.export()` after `loadDemoData()` (fixed `exportedAt` of `2026-11-23T00:00:00Z`, `appVersion` `0.1.0`). It is the cross-platform proof that both platforms read the same backup format:
+
+- Android imports it and must forecast the golden numbers for today = 2026-11-23 (gap +257,899, income 2,017,795, bills 874,896).
+- Android re-exports it (using the file's own `exportedAt`) and the result must equal this file, parsed as JSON, ignoring only `exportedAt` and `appVersion`. Key order and number formatting are normalised; values are not.
+
+It contains no real personal data. To regenerate it after a deliberate format change, write a temporary Swift test in `BeaverTests` that loads demo data into `Repository.inMemory()` and writes `Backup(...).export(now:)` to this path, then delete the test. Do not edit the file by hand.

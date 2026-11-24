@@ -31,6 +31,30 @@ android {
     buildFeatures {
         compose = true
     }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
+}
+
+// Room exports its schema JSON here; the files are committed so schema changes show in review.
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
+// The shared cross-platform backup fixture (fixtures/demo-backup-v1.json at the repo root). Tests read exactly this file.
+val backupFixture = layout.projectDirectory.file("../../fixtures/demo-backup-v1.json").asFile
+// Optional: ./gradlew :app:testDebugUnitTest -Pbeaver.private.backup=/path/to/backup.json (never commit that file).
+val privateBackup = providers.gradleProperty("beaver.private.backup")
+
+tasks.withType<Test>().configureEach {
+    systemProperty("beaver.fixture.backup", backupFixture.absolutePath)
+    privateBackup.orNull?.let { systemProperty("beaver.private.backup", it) }
+    inputs.file(backupFixture).withPropertyName("backupFixture")
+    // Show the optional private check's printed result in the console.
+    testLogging.showStandardStreams = true
 }
 
 kotlin {
@@ -51,8 +75,13 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
-    // Room is wired up now; the database class and entities come later.
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.kotlinx.coroutines.core)
     ksp(libs.androidx.room.compiler)
+
+    testImplementation(libs.junit4)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

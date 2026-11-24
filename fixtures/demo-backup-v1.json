@@ -1,0 +1,354 @@
+{
+  "appVersion" : "0.1.0",
+  "exportedAt" : "2026-11-23T00:00:00Z",
+  "schemaVersion" : 1,
+  "tables" : {
+    "bill" : [
+      {
+        "active" : true,
+        "amountCents" : 40000,
+        "anchorDate" : "2026-11-25",
+        "cadenceJson" : {
+          "weekly" : {
+
+          }
+        },
+        "category" : "housing",
+        "id" : 1,
+        "name" : "Rent",
+        "note" : ""
+      },
+      {
+        "active" : true,
+        "amountCents" : 3000,
+        "anchorDate" : "2026-11-22",
+        "cadenceJson" : {
+          "everyNDays" : {
+            "_0" : 28
+          }
+        },
+        "category" : "utilities",
+        "id" : 2,
+        "name" : "Phone",
+        "note" : ""
+      },
+      {
+        "active" : true,
+        "amountCents" : 1599,
+        "anchorDate" : "2026-12-05",
+        "cadenceJson" : {
+          "monthly" : {
+            "dayOfMonth" : 5
+          }
+        },
+        "category" : "subscription",
+        "id" : 3,
+        "name" : "Streaming",
+        "note" : ""
+      },
+      {
+        "active" : true,
+        "amountCents" : 2500,
+        "anchorDate" : "2026-11-27",
+        "cadenceJson" : {
+          "fortnightly" : {
+
+          }
+        },
+        "category" : "subscription",
+        "id" : 4,
+        "name" : "Gym",
+        "note" : ""
+      },
+      {
+        "active" : true,
+        "amountCents" : 24000,
+        "anchorDate" : "2027-01-15",
+        "cadenceJson" : {
+          "quarterly" : {
+
+          }
+        },
+        "category" : "utilities",
+        "id" : 5,
+        "name" : "Electricity",
+        "note" : ""
+      },
+      {
+        "active" : true,
+        "amountCents" : 50000,
+        "anchorDate" : "2026-12-10",
+        "cadenceJson" : {
+          "oneOff" : {
+
+          }
+        },
+        "category" : "transport",
+        "id" : 6,
+        "name" : "Car service",
+        "note" : ""
+      }
+    ],
+    "billPayment" : [
+
+    ],
+    "deposit" : [
+
+    ],
+    "expense" : [
+
+    ],
+    "goal" : [
+      {
+        "deadline" : "2027-03-31",
+        "id" : 1,
+        "name" : "Course fees",
+        "targetCents" : 600000
+      }
+    ],
+    "holiday" : [
+      {
+        "date" : "2026-12-25",
+        "name" : "Christmas Day"
+      },
+      {
+        "date" : "2026-12-26",
+        "name" : "Boxing Day"
+      },
+      {
+        "date" : "2026-12-28",
+        "name" : "Boxing Day (observed)"
+      },
+      {
+        "date" : "2027-01-01",
+        "name" : "New Year's Day"
+      },
+      {
+        "date" : "2027-01-26",
+        "name" : "Australia Day"
+      }
+    ],
+    "hoursLimit" : [
+
+    ],
+    "incomeSource" : [
+      {
+        "active" : true,
+        "amountIsNet" : false,
+        "id" : 1,
+        "kind" : "hourly",
+        "name" : "Example Bar",
+        "rateCardId" : 1,
+        "scheduleJson" : {
+          "weekly" : {
+            "lagWeeks" : 1,
+            "payWeekday" : 3
+          }
+        },
+        "taxMethodJson" : {
+          "withholdingTable" : {
+            "id" : "au-scale2-weekly"
+          }
+        }
+      }
+    ],
+    "payReceived" : [
+      {
+        "id" : 1,
+        "netCents" : 60000,
+        "note" : "",
+        "payDate" : "2026-11-25",
+        "sourceId" : 1
+      }
+    ],
+    "rateCard" : [
+      {
+        "id" : 1,
+        "name" : "Typical casual (template)",
+        "rulesJson" : [
+          {
+            "band" : "Public holiday",
+            "centsPerHour" : 6000,
+            "days" : "publicHoliday"
+          },
+          {
+            "band" : "Weekday day",
+            "centsPerHour" : 3000,
+            "days" : "weekdays",
+            "window" : {
+              "endMinute" : 1140,
+              "startMinute" : 420
+            }
+          },
+          {
+            "band" : "Weekday evening",
+            "centsPerHour" : 3300,
+            "days" : "weekdays",
+            "window" : {
+              "endMinute" : 1440,
+              "startMinute" : 1140
+            }
+          },
+          {
+            "band" : "Weekday night",
+            "centsPerHour" : 3450,
+            "days" : "weekdays",
+            "window" : {
+              "endMinute" : 420,
+              "startMinute" : 0
+            }
+          },
+          {
+            "band" : "Saturday",
+            "centsPerHour" : 3750,
+            "days" : "saturday"
+          },
+          {
+            "band" : "Sunday",
+            "centsPerHour" : 4500,
+            "days" : "sunday"
+          }
+        ]
+      }
+    ],
+    "setting" : [
+      {
+        "key" : "currency",
+        "value" : "\"AUD\""
+      },
+      {
+        "key" : "lastExportAt",
+        "value" : "\"2026-11-23T00:00:00Z\""
+      },
+      {
+        "key" : "livingBudgetCents",
+        "value" : "15000"
+      },
+      {
+        "key" : "onboardingDone",
+        "value" : "true"
+      },
+      {
+        "key" : "primaryGoalId",
+        "value" : "1"
+      }
+    ],
+    "shift" : [
+
+    ],
+    "template" : [
+      {
+        "id" : 1,
+        "name" : "Default week",
+        "sourceId" : 1
+      }
+    ],
+    "templateShift" : [
+      {
+        "breakMin" : 30,
+        "end" : "23:00",
+        "id" : 1,
+        "start" : "18:00",
+        "templateId" : 1,
+        "weekday" : 3
+      },
+      {
+        "breakMin" : 30,
+        "end" : "23:00",
+        "id" : 2,
+        "start" : "18:00",
+        "templateId" : 1,
+        "weekday" : 4
+      },
+      {
+        "breakMin" : 30,
+        "end" : "04:30",
+        "id" : 3,
+        "start" : "18:00",
+        "templateId" : 1,
+        "weekday" : 5
+      },
+      {
+        "breakMin" : 30,
+        "end" : "04:30",
+        "id" : 4,
+        "start" : "18:00",
+        "templateId" : 1,
+        "weekday" : 6
+      },
+      {
+        "breakMin" : 30,
+        "end" : "01:00",
+        "id" : 5,
+        "start" : "17:00",
+        "templateId" : 1,
+        "weekday" : 7
+      }
+    ],
+    "unavailable" : [
+      {
+        "dateFrom" : "2026-12-02",
+        "dateTo" : "2026-12-05",
+        "id" : 1,
+        "note" : "Trip"
+      }
+    ],
+    "weekSpendTotal" : [
+
+    ],
+    "withholdingTable" : [
+      {
+        "builtin" : true,
+        "id" : "au-scale2-weekly",
+        "name" : "AU ATO Schedule 1 – Scale 2 (weekly, tax-free threshold claimed)",
+        "note" : "Verify against the current ATO schedule before relying on it.",
+        "rowsJson" : [
+          {
+            "aTenThousandths" : 0,
+            "bTenThousandths" : 0,
+            "belowDollars" : 361
+          },
+          {
+            "aTenThousandths" : 1600,
+            "bTenThousandths" : 578462,
+            "belowDollars" : 500
+          },
+          {
+            "aTenThousandths" : 2600,
+            "bTenThousandths" : 1078462,
+            "belowDollars" : 625
+          },
+          {
+            "aTenThousandths" : 1800,
+            "bTenThousandths" : 578462,
+            "belowDollars" : 721
+          },
+          {
+            "aTenThousandths" : 1790,
+            "bTenThousandths" : 608377,
+            "belowDollars" : 865
+          },
+          {
+            "aTenThousandths" : 3227,
+            "bTenThousandths" : 1800385,
+            "belowDollars" : 1282
+          },
+          {
+            "aTenThousandths" : 3200,
+            "bTenThousandths" : 1765769,
+            "belowDollars" : 2596
+          },
+          {
+            "aTenThousandths" : 3900,
+            "bTenThousandths" : 3583077,
+            "belowDollars" : 3653
+          },
+          {
+            "aTenThousandths" : 4700,
+            "bTenThousandths" : 6506154
+          }
+        ]
+      }
+    ]
+  }
+}
