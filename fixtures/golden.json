@@ -1,0 +1,1122 @@
+{
+  "fixtureVersion": 1,
+  "description": "Language-neutral golden cases for the Beaver engine (SPEC section 6). All money is integer cents. Fictional demo persona only. See fixtures/README.md.",
+  "rateCards": [
+    {
+      "id": "typicalCasual",
+      "name": "Typical casual (template)",
+      "rules": [
+        {
+          "band": "Public holiday",
+          "centsPerHour": 6000,
+          "days": "publicHoliday",
+          "window": null
+        },
+        {
+          "band": "Weekday day",
+          "centsPerHour": 3000,
+          "days": "weekday",
+          "window": {
+            "from": "07:00",
+            "to": "19:00"
+          }
+        },
+        {
+          "band": "Weekday evening",
+          "centsPerHour": 3300,
+          "days": "weekday",
+          "window": {
+            "from": "19:00",
+            "to": "24:00"
+          }
+        },
+        {
+          "band": "Weekday night",
+          "centsPerHour": 3450,
+          "days": "weekday",
+          "window": {
+            "from": "00:00",
+            "to": "07:00"
+          }
+        },
+        {
+          "band": "Saturday",
+          "centsPerHour": 3750,
+          "days": "saturday",
+          "window": null
+        },
+        {
+          "band": "Sunday",
+          "centsPerHour": 4500,
+          "days": "sunday",
+          "window": null
+        }
+      ]
+    }
+  ],
+  "holidaySets": [
+    {
+      "id": "demo",
+      "holidays": [
+        {
+          "date": "2026-12-25",
+          "name": "Christmas Day"
+        },
+        {
+          "date": "2026-12-26",
+          "name": "Boxing Day"
+        },
+        {
+          "date": "2026-12-28",
+          "name": "Boxing Day (observed)"
+        },
+        {
+          "date": "2027-01-01",
+          "name": "New Year's Day"
+        },
+        {
+          "date": "2027-01-26",
+          "name": "Australia Day"
+        }
+      ]
+    }
+  ],
+  "withholdingTables": [
+    {
+      "id": "au-scale2-weekly",
+      "name": "AU ATO Schedule 1 – Scale 2 (weekly, tax-free threshold claimed)",
+      "rows": [
+        {
+          "belowDollars": 361,
+          "a": "0.0000",
+          "b": "0.0000"
+        },
+        {
+          "belowDollars": 500,
+          "a": "0.1600",
+          "b": "57.8462"
+        },
+        {
+          "belowDollars": 625,
+          "a": "0.2600",
+          "b": "107.8462"
+        },
+        {
+          "belowDollars": 721,
+          "a": "0.1800",
+          "b": "57.8462"
+        },
+        {
+          "belowDollars": 865,
+          "a": "0.1790",
+          "b": "60.8377"
+        },
+        {
+          "belowDollars": 1282,
+          "a": "0.3227",
+          "b": "180.0385"
+        },
+        {
+          "belowDollars": 2596,
+          "a": "0.3200",
+          "b": "176.5769"
+        },
+        {
+          "belowDollars": 3653,
+          "a": "0.3900",
+          "b": "358.3077"
+        },
+        {
+          "belowDollars": null,
+          "a": "0.4700",
+          "b": "650.6154"
+        }
+      ]
+    }
+  ],
+  "shiftCases": [
+    {
+      "id": "1.1",
+      "description": "Test 1 shift 1 of 5: Mon 08:30-16:30, 30 minute break.",
+      "rateCard": "typicalCasual",
+      "holidaySet": "demo",
+      "shift": {
+        "date": "2026-11-23",
+        "start": "08:30",
+        "end": "16:30",
+        "breakMinutes": 30
+      },
+      "expected": {
+        "bands": [
+          {
+            "band": "Weekday day",
+            "hoursHundredths": 750,
+            "minutes": 480
+          }
+        ],
+        "durationMinutes": 480,
+        "grossCents": 22500,
+        "paidMinutes": 450
+      }
+    },
+    {
+      "id": "1.2",
+      "description": "Test 1 shift 2 of 5: Wed 08:30-15:30, 30 minute break.",
+      "rateCard": "typicalCasual",
+      "holidaySet": "demo",
+      "shift": {
+        "date": "2026-11-25",
+        "start": "08:30",
+        "end": "15:30",
+        "breakMinutes": 30
+      },
+      "expected": {
+        "bands": [
+          {
+            "band": "Weekday day",
+            "hoursHundredths": 650,
+            "minutes": 420
+          }
+        ],
+        "durationMinutes": 420,
+        "grossCents": 19500,
+        "paidMinutes": 390
+      }
+    },
+    {
+      "id": "1.3",
+      "description": "Test 1 shift 3 of 5: Fri 17:00-01:00 (crosses into Saturday), 30 minute break.",
+      "rateCard": "typicalCasual",
+      "holidaySet": "demo",
+      "shift": {
+        "date": "2026-11-27",
+        "start": "17:00",
+        "end": "01:00",
+        "breakMinutes": 30
+      },
+      "expected": {
+        "bands": [
+          {
+            "band": "Weekday day",
+            "hoursHundredths": 188,
+            "minutes": 120
+          },
+          {
+            "band": "Weekday evening",
+            "hoursHundredths": 469,
+            "minutes": 300
+          },
+          {
+            "band": "Saturday",
+            "hoursHundredths": 94,
+            "minutes": 60
+          }
+        ],
+        "durationMinutes": 480,
+        "grossCents": 24609,
+        "paidMinutes": 450
+      }
+    },
+    {
+      "id": "1.4",
+      "description": "Test 1 shift 4 of 5: Sat 19:00-03:30 (crosses into Sunday), 30 minute break.",
+      "rateCard": "typicalCasual",
+      "holidaySet": "demo",
+      "shift": {
+        "date": "2026-11-28",
+        "start": "19:00",
+        "end": "03:30",
+        "breakMinutes": 30
+      },
+      "expected": {
+        "bands": [
+          {
+            "band": "Saturday",
+            "hoursHundredths": 471,
+            "minutes": 300
+          },
+          {
+            "band": "Sunday",
+            "hoursHundredths": 329,
+            "minutes": 210
+          }
+        ],
+        "durationMinutes": 510,
+        "grossCents": 32471,
+        "paidMinutes": 480
+      }
+    },
+    {
+      "id": "1.5",
+      "description": "Test 1 shift 5 of 5: Sun 12:00-19:45, 30 minute break.",
+      "rateCard": "typicalCasual",
+      "holidaySet": "demo",
+      "shift": {
+        "date": "2026-11-29",
+        "start": "12:00",
+        "end": "19:45",
+        "breakMinutes": 30
+      },
+      "expected": {
+        "bands": [
+          {
+            "band": "Sunday",
+            "hoursHundredths": 725,
+            "minutes": 465
+          }
+        ],
+        "durationMinutes": 465,
+        "grossCents": 32625,
+        "paidMinutes": 435
+      }
+    },
+    {
+      "id": "4",
+      "description": "Thu 22:00-02:00, no break: 2h evening + 2h weekday night.",
+      "rateCard": "typicalCasual",
+      "holidaySet": "demo",
+      "shift": {
+        "date": "2026-11-26",
+        "start": "22:00",
+        "end": "02:00",
+        "breakMinutes": 0
+      },
+      "expected": {
+        "bands": [
+          {
+            "band": "Weekday evening",
+            "hoursHundredths": 200,
+            "minutes": 120
+          },
+          {
+            "band": "Weekday night",
+            "hoursHundredths": 200,
+            "minutes": 120
+          }
+        ],
+        "durationMinutes": 240,
+        "grossCents": 13500,
+        "paidMinutes": 240
+      }
+    },
+    {
+      "id": "5",
+      "description": "Thu 24 Dec 20:00-02:00, no break: 4h evening + 2h public holiday (Christmas Day).",
+      "rateCard": "typicalCasual",
+      "holidaySet": "demo",
+      "shift": {
+        "date": "2026-12-24",
+        "start": "20:00",
+        "end": "02:00",
+        "breakMinutes": 0
+      },
+      "expected": {
+        "bands": [
+          {
+            "band": "Public holiday",
+            "hoursHundredths": 200,
+            "minutes": 120
+          },
+          {
+            "band": "Weekday evening",
+            "hoursHundredths": 400,
+            "minutes": 240
+          }
+        ],
+        "durationMinutes": 360,
+        "grossCents": 25200,
+        "paidMinutes": 360
+      }
+    },
+    {
+      "id": "6",
+      "description": "Sun 23:00-01:00, no break: 1h Sunday + 1h Monday weekday night.",
+      "rateCard": "typicalCasual",
+      "holidaySet": "demo",
+      "shift": {
+        "date": "2026-11-29",
+        "start": "23:00",
+        "end": "01:00",
+        "breakMinutes": 0
+      },
+      "expected": {
+        "bands": [
+          {
+            "band": "Weekday night",
+            "hoursHundredths": 100,
+            "minutes": 60
+          },
+          {
+            "band": "Sunday",
+            "hoursHundredths": 100,
+            "minutes": 60
+          }
+        ],
+        "durationMinutes": 120,
+        "grossCents": 7950,
+        "paidMinutes": 120
+      }
+    }
+  ],
+  "weekCases": [
+    {
+      "id": "1",
+      "description": "Mixed week Mon 2026-11-23 to Sun 2026-11-29: 36.75 hours, gross 131705, tax 24500, net 107205.",
+      "rateCard": "typicalCasual",
+      "holidaySet": "demo",
+      "withholdingTable": "au-scale2-weekly",
+      "frequency": "weekly",
+      "shifts": [
+        {
+          "date": "2026-11-23",
+          "start": "08:30",
+          "end": "16:30",
+          "breakMinutes": 30
+        },
+        {
+          "date": "2026-11-25",
+          "start": "08:30",
+          "end": "15:30",
+          "breakMinutes": 30
+        },
+        {
+          "date": "2026-11-27",
+          "start": "17:00",
+          "end": "01:00",
+          "breakMinutes": 30
+        },
+        {
+          "date": "2026-11-28",
+          "start": "19:00",
+          "end": "03:30",
+          "breakMinutes": 30
+        },
+        {
+          "date": "2026-11-29",
+          "start": "12:00",
+          "end": "19:45",
+          "breakMinutes": 30
+        }
+      ],
+      "expected": {
+        "bandHoursHundredths": {
+          "Saturday": 564,
+          "Sunday": 1054,
+          "Weekday day": 1588,
+          "Weekday evening": 469
+        },
+        "grossCents": 131705,
+        "netCents": 107205,
+        "paidMinutes": 2205,
+        "taxCents": 24500
+      }
+    },
+    {
+      "id": "2",
+      "description": "Default template week, week of Mon 2026-11-16 (shifts are the expanded template).",
+      "rateCard": "typicalCasual",
+      "holidaySet": "demo",
+      "withholdingTable": "au-scale2-weekly",
+      "frequency": "weekly",
+      "shifts": [
+        {
+          "date": "2026-11-18",
+          "start": "18:00",
+          "end": "23:00",
+          "breakMinutes": 30
+        },
+        {
+          "date": "2026-11-19",
+          "start": "18:00",
+          "end": "23:00",
+          "breakMinutes": 30
+        },
+        {
+          "date": "2026-11-20",
+          "start": "18:00",
+          "end": "04:30",
+          "breakMinutes": 30
+        },
+        {
+          "date": "2026-11-21",
+          "start": "18:00",
+          "end": "04:30",
+          "breakMinutes": 30
+        },
+        {
+          "date": "2026-11-22",
+          "start": "17:00",
+          "end": "01:00",
+          "breakMinutes": 30
+        }
+      ],
+      "expected": {
+        "bandHoursHundredths": {
+          "Saturday": 1000,
+          "Sunday": 1085,
+          "Weekday day": 275,
+          "Weekday evening": 1196,
+          "Weekday night": 94
+        },
+        "grossCents": 137283,
+        "netCents": 110983,
+        "paidMinutes": 2190,
+        "taxCents": 26300
+      }
+    },
+    {
+      "id": "7.1",
+      "description": "Public holiday week of 2026-12-21 with the default template (Fri 25 and Sat 26 Dec are holidays).",
+      "rateCard": "typicalCasual",
+      "holidaySet": "demo",
+      "withholdingTable": "au-scale2-weekly",
+      "frequency": "weekly",
+      "shifts": [
+        {
+          "date": "2026-12-23",
+          "start": "18:00",
+          "end": "23:00",
+          "breakMinutes": 30
+        },
+        {
+          "date": "2026-12-24",
+          "start": "18:00",
+          "end": "23:00",
+          "breakMinutes": 30
+        },
+        {
+          "date": "2026-12-25",
+          "start": "18:00",
+          "end": "04:30",
+          "breakMinutes": 30
+        },
+        {
+          "date": "2026-12-26",
+          "start": "18:00",
+          "end": "04:30",
+          "breakMinutes": 30
+        },
+        {
+          "date": "2026-12-27",
+          "start": "17:00",
+          "end": "01:00",
+          "breakMinutes": 30
+        }
+      ],
+      "expected": {
+        "bandHoursHundredths": {
+          "Public holiday": 1665,
+          "Sunday": 1085,
+          "Weekday day": 180,
+          "Weekday evening": 720
+        },
+        "grossCents": 177887,
+        "netCents": 138587,
+        "paidMinutes": 2190,
+        "taxCents": 39300
+      }
+    },
+    {
+      "id": "7.2",
+      "description": "Public holiday week of 2026-12-28 with the default template (Fri 1 Jan is a holiday).",
+      "rateCard": "typicalCasual",
+      "holidaySet": "demo",
+      "withholdingTable": "au-scale2-weekly",
+      "frequency": "weekly",
+      "shifts": [
+        {
+          "date": "2026-12-30",
+          "start": "18:00",
+          "end": "23:00",
+          "breakMinutes": 30
+        },
+        {
+          "date": "2026-12-31",
+          "start": "18:00",
+          "end": "23:00",
+          "breakMinutes": 30
+        },
+        {
+          "date": "2027-01-01",
+          "start": "18:00",
+          "end": "04:30",
+          "breakMinutes": 30
+        },
+        {
+          "date": "2027-01-02",
+          "start": "18:00",
+          "end": "04:30",
+          "breakMinutes": 30
+        },
+        {
+          "date": "2027-01-03",
+          "start": "17:00",
+          "end": "01:00",
+          "breakMinutes": 30
+        }
+      ],
+      "expected": {
+        "bandHoursHundredths": {
+          "Public holiday": 571,
+          "Saturday": 1000,
+          "Sunday": 1085,
+          "Weekday day": 180,
+          "Weekday evening": 720,
+          "Weekday night": 94
+        },
+        "grossCents": 152997,
+        "netCents": 121697,
+        "paidMinutes": 2190,
+        "taxCents": 31300
+      }
+    }
+  ],
+  "taxCases": [
+    {
+      "id": "3",
+      "description": "AU Scale 2 weekly withholding on gross cents (whole dollars of tax).",
+      "withholdingTable": "au-scale2-weekly",
+      "frequency": "weekly",
+      "samples": [
+        {
+          "grossCents": 30000,
+          "taxCents": 0
+        },
+        {
+          "grossCents": 73512,
+          "taxCents": 7100
+        },
+        {
+          "grossCents": 80000,
+          "taxCents": 8300
+        },
+        {
+          "grossCents": 100000,
+          "taxCents": 14300
+        },
+        {
+          "grossCents": 152000,
+          "taxCents": 31000
+        }
+      ]
+    }
+  ],
+  "scheduleCases": [
+    {
+      "id": "8",
+      "description": "Weekly, Wednesday, lag 1.",
+      "schedule": {
+        "type": "weekly",
+        "payWeekday": "wednesday",
+        "lagWeeks": 1
+      },
+      "workDateToPayday": [
+        {
+          "workDate": "2026-11-29",
+          "payday": "2026-12-02"
+        },
+        {
+          "workDate": "2026-11-30",
+          "payday": "2026-12-09"
+        }
+      ],
+      "paydayToWorkPeriod": [
+        {
+          "payday": "2026-12-02",
+          "start": "2026-11-23",
+          "end": "2026-11-29"
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "description": "Monthly fixed source (net 480000 cents), pay day 31, clamped to month end.",
+      "schedule": {
+        "type": "monthly",
+        "dayOfMonth": 31
+      },
+      "paydaysInRange": {
+        "range": {
+          "start": "2026-11-01",
+          "end": "2027-03-31"
+        },
+        "expected": [
+          "2026-11-30",
+          "2026-12-31",
+          "2027-01-31",
+          "2027-02-28",
+          "2027-03-31"
+        ]
+      }
+    }
+  ],
+  "billCases": [
+    {
+      "id": "10",
+      "description": "monthly(31) clamps to the last day of February, then returns to the 31st.",
+      "bill": {
+        "name": "Pay",
+        "amountCents": 1000,
+        "category": "other",
+        "cadence": {
+          "type": "monthly",
+          "dayOfMonth": 31
+        },
+        "anchorDate": "2027-01-31"
+      },
+      "queries": [
+        {
+          "range": {
+            "start": "2027-02-01",
+            "end": "2027-02-28"
+          },
+          "expectedDueDates": [
+            "2027-02-28"
+          ]
+        },
+        {
+          "range": {
+            "start": "2027-03-01",
+            "end": "2027-03-31"
+          },
+          "expectedDueDates": [
+            "2027-03-31"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "description": "Every 28 days from 2026-11-22 (demo Phone bill); the anchor itself is before the window.",
+      "bill": {
+        "name": "Phone",
+        "amountCents": 3000,
+        "category": "utilities",
+        "cadence": {
+          "type": "everyNDays",
+          "n": 28
+        },
+        "anchorDate": "2026-11-22"
+      },
+      "queries": [
+        {
+          "range": {
+            "start": "2026-11-23",
+            "end": "2027-03-31"
+          },
+          "expectedDueDates": [
+            "2026-12-20",
+            "2027-01-17",
+            "2027-02-14",
+            "2027-03-14"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "description": "Quarterly from 2027-01-15 (demo Electricity bill).",
+      "bill": {
+        "name": "Electricity",
+        "amountCents": 24000,
+        "category": "utilities",
+        "cadence": {
+          "type": "quarterly"
+        },
+        "anchorDate": "2027-01-15"
+      },
+      "queries": [
+        {
+          "range": {
+            "start": "2027-01-16",
+            "end": "2027-12-31"
+          },
+          "expectedDueDates": [
+            "2027-04-15",
+            "2027-07-15",
+            "2027-10-15"
+          ]
+        },
+        {
+          "range": {
+            "start": "2027-04-01",
+            "end": "2027-07-31"
+          },
+          "expectedDueDates": [
+            "2027-04-15",
+            "2027-07-15"
+          ]
+        }
+      ]
+    }
+  ],
+  "hoursLimitCases": [
+    {
+      "id": "13",
+      "description": "48 hour fortnightly limit from 2027-03-01. Five 10 hour shifts (50 hours) warn inside the fortnight and do not before the limit starts.",
+      "limit": {
+        "hoursPerFortnight": 48,
+        "effectiveFrom": "2027-03-01"
+      },
+      "scenarios": [
+        {
+          "description": "Shifts from 2027-03-01, checked on 2027-03-02: warns.",
+          "date": "2027-03-02",
+          "shifts": [
+            {
+              "date": "2027-03-01",
+              "start": "09:00",
+              "end": "19:00",
+              "breakMinutes": 0
+            },
+            {
+              "date": "2027-03-02",
+              "start": "09:00",
+              "end": "19:00",
+              "breakMinutes": 0
+            },
+            {
+              "date": "2027-03-03",
+              "start": "09:00",
+              "end": "19:00",
+              "breakMinutes": 0
+            },
+            {
+              "date": "2027-03-04",
+              "start": "09:00",
+              "end": "19:00",
+              "breakMinutes": 0
+            },
+            {
+              "date": "2027-03-05",
+              "start": "09:00",
+              "end": "19:00",
+              "breakMinutes": 0
+            }
+          ],
+          "expected": {
+            "warns": true,
+            "workedMinutes": 3000,
+            "period": {
+              "start": "2027-03-01",
+              "end": "2027-03-14"
+            }
+          }
+        },
+        {
+          "description": "Same shifts from 2027-02-15, checked on 2027-02-16 (before the limit starts): no warning.",
+          "date": "2027-02-16",
+          "shifts": [
+            {
+              "date": "2027-02-15",
+              "start": "09:00",
+              "end": "19:00",
+              "breakMinutes": 0
+            },
+            {
+              "date": "2027-02-16",
+              "start": "09:00",
+              "end": "19:00",
+              "breakMinutes": 0
+            },
+            {
+              "date": "2027-02-17",
+              "start": "09:00",
+              "end": "19:00",
+              "breakMinutes": 0
+            },
+            {
+              "date": "2027-02-18",
+              "start": "09:00",
+              "end": "19:00",
+              "breakMinutes": 0
+            },
+            {
+              "date": "2027-02-19",
+              "start": "09:00",
+              "end": "19:00",
+              "breakMinutes": 0
+            }
+          ],
+          "expected": {
+            "warns": false
+          }
+        }
+      ]
+    }
+  ],
+  "forecastCases": [
+    {
+      "id": "14",
+      "description": "Forecast smoke test: demo persona Sam, today 2026-11-23, deadline 2027-03-31.",
+      "input": {
+        "today": "2026-11-23",
+        "source": {
+          "name": "Example Bar",
+          "kind": "hourly",
+          "rateCard": "typicalCasual",
+          "withholdingTable": "au-scale2-weekly",
+          "schedule": {
+            "type": "weekly",
+            "payWeekday": "wednesday",
+            "lagWeeks": 1
+          }
+        },
+        "template": {
+          "name": "Default week",
+          "shifts": [
+            {
+              "weekday": "wednesday",
+              "start": "18:00",
+              "end": "23:00",
+              "breakMinutes": 30
+            },
+            {
+              "weekday": "thursday",
+              "start": "18:00",
+              "end": "23:00",
+              "breakMinutes": 30
+            },
+            {
+              "weekday": "friday",
+              "start": "18:00",
+              "end": "04:30",
+              "breakMinutes": 30
+            },
+            {
+              "weekday": "saturday",
+              "start": "18:00",
+              "end": "04:30",
+              "breakMinutes": 30
+            },
+            {
+              "weekday": "sunday",
+              "start": "17:00",
+              "end": "01:00",
+              "breakMinutes": 30
+            }
+          ]
+        },
+        "bills": [
+          {
+            "name": "Rent",
+            "amountCents": 40000,
+            "category": "housing",
+            "cadence": {
+              "type": "weekly"
+            },
+            "anchorDate": "2026-11-25"
+          },
+          {
+            "name": "Phone",
+            "amountCents": 3000,
+            "category": "utilities",
+            "cadence": {
+              "type": "everyNDays",
+              "n": 28
+            },
+            "anchorDate": "2026-11-22"
+          },
+          {
+            "name": "Streaming",
+            "amountCents": 1599,
+            "category": "subscription",
+            "cadence": {
+              "type": "monthly",
+              "dayOfMonth": 5
+            },
+            "anchorDate": "2026-12-05"
+          },
+          {
+            "name": "Gym",
+            "amountCents": 2500,
+            "category": "subscription",
+            "cadence": {
+              "type": "fortnightly"
+            },
+            "anchorDate": "2026-11-27"
+          },
+          {
+            "name": "Electricity",
+            "amountCents": 24000,
+            "category": "utilities",
+            "cadence": {
+              "type": "quarterly"
+            },
+            "anchorDate": "2027-01-15"
+          },
+          {
+            "name": "Car service",
+            "amountCents": 50000,
+            "category": "transport",
+            "cadence": {
+              "type": "oneOff"
+            },
+            "anchorDate": "2026-12-10"
+          }
+        ],
+        "livingBudgetCents": 15000,
+        "holidays": [
+          {
+            "date": "2026-12-25",
+            "name": "Christmas Day"
+          },
+          {
+            "date": "2026-12-26",
+            "name": "Boxing Day"
+          },
+          {
+            "date": "2026-12-28",
+            "name": "Boxing Day (observed)"
+          },
+          {
+            "date": "2027-01-01",
+            "name": "New Year's Day"
+          },
+          {
+            "date": "2027-01-26",
+            "name": "Australia Day"
+          }
+        ],
+        "unavailable": [
+          {
+            "from": "2026-12-02",
+            "to": "2026-12-05",
+            "note": "Trip"
+          }
+        ],
+        "goal": {
+          "name": "Course fees",
+          "targetCents": 600000,
+          "deadline": "2027-03-31",
+          "depositsCents": 0
+        },
+        "paysReceived": [
+          {
+            "payDate": "2026-11-25",
+            "netCents": 60000
+          }
+        ]
+      },
+      "expected": {
+        "billTotals": [
+          {
+            "count": 19,
+            "name": "Rent",
+            "totalCents": 760000
+          },
+          {
+            "count": 4,
+            "name": "Phone",
+            "totalCents": 12000
+          },
+          {
+            "count": 4,
+            "name": "Streaming",
+            "totalCents": 6396
+          },
+          {
+            "count": 9,
+            "name": "Gym",
+            "totalCents": 22500
+          },
+          {
+            "count": 1,
+            "name": "Electricity",
+            "totalCents": 24000
+          },
+          {
+            "count": 1,
+            "name": "Car service",
+            "totalCents": 50000
+          }
+        ],
+        "gapCents": 257899,
+        "paydayCount": 19,
+        "paydayNets": [
+          {
+            "netCents": 60000,
+            "payday": "2026-11-25"
+          },
+          {
+            "netCents": 110983,
+            "payday": "2026-12-02"
+          },
+          {
+            "netCents": 32766,
+            "payday": "2026-12-09"
+          },
+          {
+            "netCents": 110983,
+            "payday": "2026-12-16"
+          },
+          {
+            "netCents": 110983,
+            "payday": "2026-12-23"
+          },
+          {
+            "netCents": 138587,
+            "payday": "2026-12-30"
+          },
+          {
+            "netCents": 121697,
+            "payday": "2027-01-06"
+          },
+          {
+            "netCents": 110983,
+            "payday": "2027-01-13"
+          },
+          {
+            "netCents": 110983,
+            "payday": "2027-01-20"
+          },
+          {
+            "netCents": 110983,
+            "payday": "2027-01-27"
+          },
+          {
+            "netCents": 110983,
+            "payday": "2027-02-03"
+          },
+          {
+            "netCents": 110983,
+            "payday": "2027-02-10"
+          },
+          {
+            "netCents": 110983,
+            "payday": "2027-02-17"
+          },
+          {
+            "netCents": 110983,
+            "payday": "2027-02-24"
+          },
+          {
+            "netCents": 110983,
+            "payday": "2027-03-03"
+          },
+          {
+            "netCents": 110983,
+            "payday": "2027-03-10"
+          },
+          {
+            "netCents": 110983,
+            "payday": "2027-03-17"
+          },
+          {
+            "netCents": 110983,
+            "payday": "2027-03-24"
+          },
+          {
+            "netCents": 110983,
+            "payday": "2027-03-31"
+          }
+        ],
+        "projectedAtDeadlineCents": 857899,
+        "requiredPerPaydayCents": 31579,
+        "totalBillsCents": 874896,
+        "totalIncomeCents": 2017795,
+        "totalLivingCents": 285000
+      }
+    }
+  ]
+}
