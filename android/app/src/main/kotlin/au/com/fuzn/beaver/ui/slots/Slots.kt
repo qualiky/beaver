@@ -28,7 +28,7 @@ fun RosterTab(env: AppEnv, modifier: Modifier = Modifier) = SlotPlaceholder("Ros
 
 /** Money tab: bills, spending and goals. */
 @Composable
-fun MoneyTab(env: AppEnv, modifier: Modifier = Modifier) = SlotPlaceholder("Money", modifier)
+fun MoneyTab(env: AppEnv, modifier: Modifier = Modifier) = au.com.fuzn.beaver.ui.money.MoneyScreen(env, modifier)
 
 /**
  * Settings, a full screen opened from the gear in the top bar and from the Week "Back up now" button.
