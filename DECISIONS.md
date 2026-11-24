@@ -104,3 +104,13 @@
 - **Template weeks as shifts.** Weeks 2 and 7 list the expanded shifts, so a port does not need the template expander to run them. The forecast case keeps the template as data, since it tests the expander.
 - **Day selector name.** The fixture says `weekday`; the Swift enum case is `weekdays`. The loader maps it.
 - **Test shape.** One `@Test` per SPEC test number still, plus fixture integrity tests (version, SPEC coverage 1 to 14, unique ids, and that the fixture rate card, table, holidays and demo input equal `DemoData`). The edge-case tests are untouched.
+## Android
+
+- **Layout.** `android/` is a separate Gradle build (`:core`, `:app`). `:core` is a Kotlin/JVM library (package `au.com.fuzn.beaver.core`) that must stay pure: `scripts/check-android-core-imports.sh` fails if a file in `core/src/main` imports anything except `kotlin.*`, `kotlinx.serialization.*`, `java.time.*`, `java.math.*` or `java.util.*`. `:app` is the Compose shell (namespace and applicationId `au.com.fuzn.beaver`, minSdk 29, compile and target SDK 37, versionName 0.1.0).
+- **Pinned versions** (all in `android/gradle/libs.versions.toml`, stable and over two weeks old on 2026-11-24): Gradle 9.8.2 (wrapper, with `distributionSha256Sum`), AGP 9.5.0, Kotlin 2.4.20, KSP 2.3.12, Compose BOM 2026.09.00, Room 2.8.4, activity-compose 1.12.4, kotlinx-serialization-json 1.11.0, JUnit 6.1.1 (Jupiter) with kotlin-test-junit5.
+- **JDK.** Use Android Studio's bundled JBR for Gradle: `export JAVA_HOME="$HOME/Applications/Android Studio.app/Contents/jbr/Contents/Home"` (or set `org.gradle.java.home` in `~/.gradle/gradle.properties`, never in the repo). It is newer than 17, so code is compiled for JVM 17 bytecode through `jvmTarget`/`sourceCompatibility`, not a Gradle toolchain (no toolchain download repo is configured and none is wanted).
+- **SDK path.** `android/local.properties` (`sdk.dir=...`) is git-ignored; each machine creates its own. `ANDROID_HOME` also works.
+- **No INTERNET permission.** The manifest declares none; the app is offline-only. Do not add one without a decision here. `allowBackup` is off.
+- **Room and serialization** are on the app's classpath (Room through KSP) but there is no database class yet, because Room needs at least one entity to compile. Add both together.
+- **Shell.** The `onboardingDone` gate is in-memory (`rememberSaveable`) and replaced by a persisted setting later. Navigation is plain state in `BeaverApp` (Week, Roster, Money, Plan; Settings from the top bar), with no navigation library yet.
+- **Theme.** Material 3 with a warm brown/amber seed (`0xFF8B5A2B`) as static light and dark schemes. Dynamic color is supported but off by default so the brand accent shows; flip `dynamicColor` in `BeaverTheme` to opt in.

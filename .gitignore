@@ -30,3 +30,16 @@ personal/
 
 # Agent worktrees and local tool state
 .claude/
+
+# Android
+android/.gradle/
+android/build/
+android/*/build/
+android/local.properties
+android/keystore.properties
+*.jks
+*.keystore
+android/.idea/
+*.apk
+*.aab
+.kotlin/
