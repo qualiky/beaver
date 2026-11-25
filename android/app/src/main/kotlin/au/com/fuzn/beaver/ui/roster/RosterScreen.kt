@@ -141,7 +141,7 @@ private fun RosterHost(state: RosterState, onOpenSettings: () -> Unit, modifier:
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(snackbarHost) },
         floatingActionButton = {
-            if (state.loaded && data.hourlySources.isNotEmpty()) {
+            if (state.loaded && data.hourlySources.isNotEmpty() && data.weekShifts.isNotEmpty()) {
                 ExtendedFloatingActionButton(
                     onClick = { scope.launch { editor = state.makeEditor() } },
                     icon = { Icon(Icons.Filled.Add, contentDescription = null) },

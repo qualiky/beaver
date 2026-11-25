@@ -48,6 +48,9 @@ class RosterFormatTests {
         val minus = RosterFormat.signedMoney(Money(-400), "AUD")
         assertEquals('+', plus.first())
         assertEquals('-', minus.first())
+        assertEquals("+$12.30", plus)
+        assertEquals("-$4.00", minus)
+        assertEquals("$1,372.83", RosterFormat.money(Money(137283), "AUD"))
         assertEquals(RosterFormat.money(Money(0), "AUD"), RosterFormat.signedMoney(Money.ZERO, "AUD"))
     }
 }

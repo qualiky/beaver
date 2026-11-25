@@ -3,15 +3,14 @@ package au.com.fuzn.beaver.ui.roster
 import au.com.fuzn.beaver.core.HoursWarning
 import au.com.fuzn.beaver.core.HoursWarningLevel
 import au.com.fuzn.beaver.core.Money
+import au.com.fuzn.beaver.ui.common.FigureFormatter
 import au.com.fuzn.beaver.ui.editors.MoneyParser
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.util.Currency
 import java.util.Locale
 
 /** Pure formatting and parsing helpers for the Roster screen. No state, so they are easy to test on the JVM. */
@@ -52,25 +51,11 @@ object RosterFormat {
         return if (m == 0) "$h h" else "$h h $m m"
     }
 
-    private fun currencyFormat(currency: String): NumberFormat {
-        val format = NumberFormat.getCurrencyInstance(Locale.getDefault())
-        runCatching { format.currency = Currency.getInstance(currency) }
-        return format
-    }
-
-    /** Money from integer cents, formatted for the locale ("$1,372.83"). The digits never go through a Double. */
-    fun money(money: Money, currency: String): String =
-        currencyFormat(currency).format(BigDecimal.valueOf(money.cents, 2))
+    /** Money from integer cents via the shared [FigureFormatter] (narrow symbol, "$1,372.83"). */
+    fun money(money: Money, currency: String): String = FigureFormatter(currency).string(money)
 
     /** Money with an explicit sign: "+$12.30", "-$4.00", "$0.00". */
-    fun signedMoney(money: Money, currency: String): String {
-        val text = money(Money(Math.abs(money.cents)), currency)
-        return when {
-            money.cents > 0 -> "+$text"
-            money.cents < 0 -> "-$text"
-            else -> text
-        }
-    }
+    fun signedMoney(money: Money, currency: String): String = FigureFormatter(currency).signed(money)
 
     /** Typed amount text as [Money] through the shared [MoneyParser] (exact cents, no Double). Null if empty or invalid. */
     fun parseMoney(text: String): Money? = MoneyParser.cents(text)?.let(::Money)
